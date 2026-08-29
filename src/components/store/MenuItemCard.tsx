@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { ginga } from '@/lib/ginga-sdk';
 import { formatUSD } from '@/lib/money';
@@ -16,7 +16,14 @@ export interface MenuItemCardProps {
 }
 
 export function MenuItemCard({ sku, name, description, priceCents, emoji }: MenuItemCardProps) {
+  // StrictMode runs effects twice on mount in dev; the per-instance ref makes
+  // the emission idempotent per mount while still re-emitting on a genuine
+  // revisit (fresh instance after unmount) or sku change.
+  const emittedSku = useRef<string | null>(null);
+
   useEffect(() => {
+    if (emittedSku.current === sku) return;
+    emittedSku.current = sku;
     ginga.intent('view_item', { sku });
   }, [sku]);
 

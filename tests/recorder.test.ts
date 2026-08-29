@@ -86,4 +86,48 @@ describe('recorder', () => {
     rec.stop();
     expect(onTraceChange).toHaveBeenCalledTimes(2); // stop() does not change the trace
   });
+
+  it('drops consecutive duplicate view_item steps (StrictMode defense)', () => {
+    const rec = createRecorder();
+    rec.start();
+    ginga.intent('view_item', { sku: 'sonho' });
+    ginga.intent('view_item', { sku: 'sonho' }); // e.g. StrictMode double-effect
+    ginga.intent('view_item', { sku: 'bolo-rolo' }); // different sku: kept
+    ginga.intent('view_item', { sku: 'sonho' }); // non-consecutive: kept
+    const skuOf = (s: { params: Record<string, unknown> }) => String(s.params.sku);
+    expect(rec.getRecording().trace.filter((s) => s.intent === 'view_item').map(skuOf)).toEqual([
+      'sonho',
+      'bolo-rolo',
+      'sonho',
+    ]);
+    rec.stop();
+  });
+
+  it('does not dedupe consecutive duplicates of non-view intents', () => {
+    const rec = createRecorder();
+    rec.start();
+    ginga.intent('add_item', { sku: 'sonho', qty: 1 });
+    ginga.intent('add_item', { sku: 'sonho', qty: 1 }); // user really added twice
+    ginga.intent('set_note', { text: 'warm' });
+    ginga.intent('set_note', { text: 'warm' });
+    expect(rec.getRecording().trace.map((s) => s.intent)).toEqual([
+      'add_item',
+      'add_item',
+      'set_note',
+      'set_note',
+    ]);
+    rec.stop();
+  });
+
+  it('does not fire onTraceChange for a deduped duplicate', () => {
+    const onTraceChange = vi.fn();
+    const rec = createRecorder(onTraceChange);
+    rec.start();
+    expect(onTraceChange).toHaveBeenCalledTimes(1); // start → []
+    ginga.intent('view_item', { sku: 'sonho' });
+    expect(onTraceChange).toHaveBeenCalledTimes(2);
+    ginga.intent('view_item', { sku: 'sonho' }); // deduped: no notify
+    expect(onTraceChange).toHaveBeenCalledTimes(2);
+    rec.stop();
+  });
 });
