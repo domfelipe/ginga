@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ginga — Devpost gallery frames</title>
+<style>
+  :root{
+    --paper:#f8f1e5; --paper-2:#fdf9f1; --ink:#2b2118; --ink-soft:#6b5d4f;
+    --amber:#b8860b; --amber-deep:#9a6d06; --terra:#c0653a; --cream:#ffffff;
+    --char:#211a14; --char-2:#2b2118; --sand:#e8dcc8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#111;font-family:'Avenir Next','Segoe UI',system-ui,sans-serif;color:var(--ink)}
+  .frame{width:1280px;height:720px;position:relative;overflow:hidden;background:var(--paper)}
+  .frame.dark{background:var(--char);color:#f3ead9}
+  .pad{position:absolute;inset:0;padding:72px 84px;display:flex;flex-direction:column}
+  .kicker{font-size:15px;letter-spacing:.28em;text-transform:uppercase;font-weight:700;color:var(--terra)}
+  h1{font-family:Georgia,'Times New Roman',serif;font-weight:700;letter-spacing:-.01em;line-height:1.02}
+  .footer{position:absolute;left:84px;right:84px;bottom:44px;display:flex;align-items:center;gap:14px;font-size:15px;color:var(--ink-soft)}
+  .dark .footer{color:#b7a68f}
+  .rodabig{position:absolute;border-radius:50%;border:1.5px solid rgba(192,101,58,.35)}
+  .rodadash{position:absolute;border-radius:50%;border:1.5px dashed rgba(184,134,11,.4)}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:.02em}
+  .dotred{width:12px;height:12px;border-radius:50%;background:#e23d28;display:inline-block}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--cream);border:1px solid #eadfcd;border-radius:999px;padding:8px 16px;font-size:16px;font-weight:600;box-shadow:0 2px 10px rgba(43,33,24,.06)}
+  .mono{font-family:ui-monospace,'SF Mono',Menlo,monospace}
+  .card{background:var(--cream);border:1px solid #eadfcd;border-radius:18px;box-shadow:0 14px 40px rgba(43,33,24,.10)}
+  .stamp{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--amber);color:var(--amber-deep);border-radius:10px;padding:5px 12px;font-weight:800;font-size:14px;letter-spacing:.08em;transform:rotate(-3deg);text-transform:uppercase}
+  .row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px dashed #d9cbb2;padding:10px 0;font-size:17px}
+</style>
+</head>
+<body>
+
+<!-- FRAME 1 — HOOK -->
+<section class="frame dark" id="frame1">
+  <div class="rodabig" style="width:760px;height:760px;right:-220px;top:-260px"></div>
+  <div class="rodadash" style="width:560px;height:560px;right:-120px;top:-160px"></div>
+  <div class="pad">
+    <div class="logo" style="color:#f3ead9"><span class="dotred"></span> GINGA</div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:900px">
+      <div class="kicker">the problem</div>
+      <h1 style="font-size:76px;color:#f3ead9;margin:18px 0 26px">Your website is<br><em style="color:var(--terra)">deaf</em> to AI agents.</h1>
+      <div style="background:var(--char-2);border:1px solid #3d3125;border-radius:14px;padding:18px 22px;max-width:640px;font-size:18px;color:#cdbfa8">
+        <span style="color:#8fa3ff">ChatGPT&nbsp;·</span> “Order 3 dozen pão de queijo for Friday — it's for Pedro's party.”
+        <div style="margin-top:10px;color:#8a7a63;font-size:16px">↳ I can't fill custom notes on this site. Try ordering manually.</div>
+      </div>
+    </div>
+    <div class="footer"><span>Ginga · Teach AI by showing, not coding · OpenAI WebMCP Challenge</span></div>
+  </div>
+</section>
+
+<!-- FRAME 2 — TEACH -->
+<section class="frame" id="frame2">
+  <div class="rodabig" style="width:820px;height:820px;left:-300px;bottom:-380px"></div>
+  <div class="pad">
+    <div class="logo"><span class="dotred"></span> GINGA</div>
+    <div style="flex:1;display:grid;grid-template-columns:1fr 460px;gap:60px;align-items:center">
+      <div>
+        <div class="kicker">step 1 · teach</div>
+        <h1 style="font-size:66px;margin:16px 0 20px">Teach by <em style="color:var(--terra)">showing</em>,<br>not coding.</h1>
+        <div style="font-size:20px;color:var(--ink-soft);max-width:520px;line-height:1.5">The owner demonstrates the flow once, narrating out loud. Ginga records semantic steps — then AI compiles them into a real WebMCP tool.</div>
+        <div style="margin-top:26px;display:inline-flex;align-items:center;gap:10px;background:#e23d28;color:#fff;border-radius:999px;padding:10px 20px;font-weight:700;font-size:16px"><span class="dotred" style="background:#fff"></span> REC · step 3</div>
+      </div>
+      <div class="card" style="padding:26px 30px">
+        <div class="mono" style="font-size:13px;letter-spacing:.18em;color:var(--ink-soft)">ORDER · PADARIA AURORA</div>
+        <div class="row" style="margin-top:12px"><span><b>2×</b> Pão de Queijo (dozen)</span><span class="mono">$30.00</span></div>
+        <div class="row"><span>deliver</span><span style="color:var(--terra);font-weight:600">Friday</span></div>
+        <div class="row" style="border-bottom:none"><span>note</span><span style="color:var(--terra);font-weight:600">“for Pedro's party”</span></div>
+        <div style="margin-top:14px;font-size:14px;color:var(--ink-soft)">↓ compiles into</div>
+        <div style="margin-top:10px;border:1px solid #eadfcd;border-radius:12px;padding:14px 16px">
+          <div class="mono" style="font-weight:700">create_birthday_order</div>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+            <span class="chip mono" style="font-size:13px;padding:5px 12px">qty · number</span>
+            <span class="chip mono" style="font-size:13px;padding:5px 12px">deliveryDate · string</span>
+            <span class="chip mono" style="font-size:13px;padding:5px 12px">note · string</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Ginga · Teach AI by showing, not coding · OpenAI WebMCP Challenge</span></div>
+  </div>
+</section>
+
+<!-- FRAME 3 — DELEGATE -->
+<section class="frame" id="frame3">
+  <div class="rodadash" style="width:700px;height:700px;right:-260px;top:-300px"></div>
+  <div class="pad">
+    <div class="logo"><span class="dotred"></span> GINGA</div>
+    <div style="flex:1;display:grid;grid-template-columns:1fr 460px;gap:60px;align-items:center">
+      <div>
+        <div class="kicker">step 2 · delegate</div>
+        <h1 style="font-size:66px;margin:16px 0 20px">Any agent runs it.<br><em style="color:var(--terra)">Zero API.</em></h1>
+        <div style="font-size:20px;color:var(--ink-soft);max-width:520px;line-height:1.5">The tool lives in the page and executes with the user's own session. Agents discover it at runtime — it was born minutes ago.</div>
+        <div style="margin-top:26px;background:var(--char-2);color:#e9dcc4;border-radius:14px;padding:16px 20px;font-size:17px;max-width:520px">
+          <span style="color:#8fa3ff">ChatGPT&nbsp;·</span> “3 dozen pão de queijo for Friday — Pedro's party”<br>
+          <span style="color:#9db28a">✓ create_birthday_order({ qty: 24, deliveryDate: “friday”, note: “Pedro's party” })</span>
+        </div>
+      </div>
+      <div class="card" style="padding:24px 28px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="mono" style="font-weight:700;font-size:18px"># ac9d9221</span>
+          <span class="stamp">🤖 agent · taught tool</span>
+        </div>
+        <div class="row" style="margin-top:12px"><span><b>2×</b> Pão de Queijo (dozen)</span><span class="mono">$30.00</span></div>
+        <div class="row" style="border-bottom:none"><span><b>Total</b></span><span class="mono"><b>$30.00</b></span></div>
+        <div style="margin-top:10px;background:#f6efe2;border-radius:10px;padding:10px 14px;font-size:15px;color:var(--ink-soft)">Delivery: 2026-09-05 · note: “for Pedro's party”</div>
+        <div style="margin-top:12px;font-size:13px;letter-spacing:.2em;color:var(--ink-soft)">KITCHEN WALL · LIVE</div>
+      </div>
+    </div>
+    <div class="footer"><span>Ginga · Teach AI by showing, not coding · OpenAI WebMCP Challenge</span></div>
+  </div>
+</section>
+
+<!-- FRAME 4 — VISION -->
+<section class="frame dark" id="frame4">
+  <div class="rodabig" style="width:900px;height:900px;left:50%;top:50%;transform:translate(-50%,-50%)"></div>
+  <div class="rodadash" style="width:640px;height:640px;left:50%;top:50%;transform:translate(-50%,-50%)"></div>
+  <div class="pad" style="align-items:center;justify-content:center;text-align:center">
+    <div class="logo" style="color:#f3ead9"><span class="dotred"></span> GINGA</div>
+    <h1 style="font-size:58px;color:#f3ead9;margin:26px 0 18px;max-width:1000px">Every UI-only flow is an API<br><em style="color:var(--terra)">waiting to be taught.</em></h1>
+    <div style="font-size:19px;color:#b7a68f;max-width:760px;line-height:1.5">One script tag makes any site agent-native — with the user's session, on the user's page. Bakeries, SaaS dashboards, internal admin panels.</div>
+    <div style="margin-top:30px;display:flex;gap:12px">
+      <span class="chip mono dark" style="background:var(--char-2);border-color:#3d3125;color:#e9dcc4">&lt;script src="ginga.app/sdk.js"&gt;</span>
+      <span class="chip" style="background:var(--char-2);border-color:#3d3125;color:#e9dcc4">● 2 tools live for agents</span>
+    </div>
+    <div class="footer" style="justify-content:center"><span>Next.js · WebMCP · Neon · Vercel · OpenAI — github.com/domfelipe/ginga</span></div>
+  </div>
+</section>
+
+<!-- FRAME 5 — OG / THUMBNAIL -->
+<section class="frame dark" id="frame5">
+  <div class="rodabig" style="width:820px;height:820px;right:-260px;bottom:-380px"></div>
+  <div class="rodadash" style="width:600px;height:600px;right:-160px;bottom:-240px"></div>
+  <div class="pad" style="justify-content:center">
+    <div class="logo" style="color:#f3ead9;font-size:22px"><span class="dotred"></span> GINGA</div>
+    <h1 style="font-size:88px;color:#f3ead9;margin:22px 0 16px;line-height:.98">Teach AI<br>by <em style="color:var(--terra)">showing</em>.</h1>
+    <div style="font-size:22px;color:#b7a68f;max-width:640px;line-height:1.45">Demonstrate a flow once — Ginga compiles it into a real WebMCP tool any agent can run.</div>
+    <div style="margin-top:26px;font-size:15px;letter-spacing:.24em;color:#8a7a63">OPENAI WEBCMCP CHALLENGE</div>
+  </div>
+</section>
+
+</body>
+</html>

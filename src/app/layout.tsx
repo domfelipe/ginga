@@ -34,6 +34,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     type: "website",
     siteName: "Ginga",
+    images: [{ url: `${SITE_URL}/og.png`, width: 1280, height: 720, alt: "Ginga — Teach AI by showing" }],
   },
 };
 

@@ -2,7 +2,16 @@
 
 **Ginga** turns website flows into AI-agent tools by demonstration, not code. Order pão de queijo like a human once — and that exact flow becomes a live [WebMCP](https://github.com/openai/webmcp) tool any agent can call, on your site or anywhere. Built for the **OpenAI WebMCP Challenge** by DomHubs.
 
-*Demo capture lands with the submission (Task 10/11).*
+*Live demo capture lands with the submission video. Until then, the story in four frames:*
+
+<p align="center">
+  <img src="docs/gallery/gallery-1-hook.png" width="49%" alt="The problem: your website is deaf to AI agents">
+  <img src="docs/gallery/gallery-2-teach.png" width="49%" alt="Teach by showing, not coding">
+</p>
+<p align="center">
+  <img src="docs/gallery/gallery-3-delegate.png" width="49%" alt="Any agent runs it — zero API">
+  <img src="docs/gallery/gallery-4-vision.png" width="49%" alt="Every UI-only flow is an API waiting to be taught">
+</p>
 
 ## How it works (3 steps)
 
