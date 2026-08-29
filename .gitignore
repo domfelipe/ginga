@@ -40,6 +40,12 @@ yarn-error.log*
 # neon
 .neon
 
+# local agent workspaces
+.agents/
+.claude/
+.mimosa/
+skills-lock.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

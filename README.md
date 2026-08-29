@@ -2,13 +2,7 @@
 
 **Ginga** turns website flows into AI-agent tools by demonstration, not code. Order pão de queijo like a human once — and that exact flow becomes a live [WebMCP](https://github.com/openai/webmcp) tool any agent can call, on your site or anywhere. Built for the **OpenAI WebMCP Challenge** by DomHubs.
 
-## Demo
-
-> Recording a 30-second walkthrough (`docs/demo.gif`) — placeholder below until the final capture.
-
-![Ginga demo](docs/demo.gif)
-
-_(Placeholder — Task 10/11 records the final capture. The scene: a customer orders from Padaria Aurora in the browser; the same flow is then invoked by an agent as a registered WebMCP tool.)_
+*Demo capture lands with the submission (Task 10/11).*
 
 ## How it works (3 steps)
 
