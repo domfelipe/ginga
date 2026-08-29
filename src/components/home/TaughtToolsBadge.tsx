@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
 import type { TaughtTool } from '@/lib/types';
 
 /**
@@ -31,8 +30,18 @@ export function TaughtToolsBadge() {
   }, []);
 
   return (
-    <Badge variant="outline">
-      {count === null ? 'Taught tools: …' : `Taught tools: ${count}`}
-    </Badge>
+    <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur">
+      <span aria-hidden className="relative flex size-2">
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+        <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+      </span>
+      {count === null ? (
+        'Taught tools: …'
+      ) : (
+        <>
+          {count} taught {count === 1 ? 'tool' : 'tools'} live for agents
+        </>
+      )}
+    </span>
   );
 }
