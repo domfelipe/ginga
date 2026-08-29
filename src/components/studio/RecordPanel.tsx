@@ -1,22 +1,51 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
+import { CompilePreview } from '@/components/studio/CompilePreview';
 import { useRecorder } from '@/components/provider/RecorderProvider';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import type { IntentTraceStep } from '@/lib/types';
-
-/** `add_item · sku=pao-queijo-duzia, qty=1` */
-export function formatStep(step: IntentTraceStep): string {
-  const params = Object.entries(step.params)
-    .map(([key, value]) => `${key}=${typeof value === 'string' ? value : JSON.stringify(value)}`)
-    .join(', ');
-  return params ? `${step.intent} · ${params}` : step.intent;
-}
+import { formatStep } from '@/lib/steps';
+import type { CompiledTool } from '@/lib/types';
 
 export function RecordPanel() {
   const { isRecording, trace, narration, start, stop, setNarration } = useRecorder();
+  const [compiling, setCompiling] = useState(false);
+  const [compiled, setCompiled] = useState<CompiledTool | null>(null);
+  const [compileCount, setCompileCount] = useState(0);
+
+  async function handleCompile() {
+    setCompiling(true);
+    try {
+      const res = await fetch('/api/compile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ narration, trace }),
+      });
+      const data: unknown = await res.json().catch(() => null);
+      if (!res.ok) {
+        const message =
+          (data as { error?: string } | null)?.error ??
+          `compilation failed with status ${res.status}`;
+        toast.error(message);
+        return;
+      }
+      const tool = (data as { tool?: CompiledTool } | null)?.tool;
+      if (!tool) {
+        toast.error('compiler returned no tool');
+        return;
+      }
+      setCompiled(tool);
+      setCompileCount((c) => c + 1);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'network error during compilation');
+    } finally {
+      setCompiling(false);
+    }
+  }
 
   if (isRecording) {
     return (
@@ -45,6 +74,12 @@ export function RecordPanel() {
         </div>
       </div>
     );
+  }
+
+  if (compiled) {
+    // re-compiling goes back to the captured trace (narration is kept);
+    // key remounts the preview per compilation so its draft resets
+    return <CompilePreview key={compileCount} tool={compiled} onRecompile={() => setCompiled(null)} />;
   }
 
   if (trace.length === 0) {
@@ -90,12 +125,14 @@ export function RecordPanel() {
       </div>
 
       <div>
-        <Button disabled title="Available in the next build">
-          Compile tool
+        <Button onClick={handleCompile} disabled={compiling}>
+          {compiling ? 'Compiling…' : 'Compile tool'}
         </Button>
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          Compilation arrives in the next build — your recording is kept.
-        </p>
+        {compiling && (
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Turning your trace into a tool with gpt-4o-mini…
+          </p>
+        )}
       </div>
     </div>
   );

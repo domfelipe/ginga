@@ -1,0 +1,176 @@
+'use client';
+
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { validateTool } from '@/lib/placeholders';
+import { formatStep } from '@/lib/steps';
+import type { CompiledTool } from '@/lib/types';
+
+interface CompiledToolSchema {
+  type?: string;
+  properties?: Record<string, { type?: string; default?: unknown; [key: string]: unknown }>;
+  required?: string[];
+  [key: string]: unknown;
+}
+
+interface CompilePreviewProps {
+  tool: CompiledTool;
+  /** Back to the captured trace (e.g. to re-record or re-run the compiler). */
+  onRecompile: () => void;
+}
+
+// guarantee editable defaults even if the model omits properties/required
+function normalize(tool: CompiledTool): CompiledTool {
+  const schema = (tool.inputSchema ?? {}) as CompiledToolSchema;
+  return {
+    ...tool,
+    inputSchema: {
+      ...schema,
+      type: 'object',
+      properties: schema.properties ?? {},
+      required: schema.required ?? [],
+    },
+  };
+}
+
+/**
+ * Editable review of the compiled tool: name, description, schema properties
+ * (required toggle + default) and a read-only summary of the steps.
+ * "Save & register" is a visible placeholder — persistence lands in Task 7.
+ *
+ * State is initialized from props once; the parent must pass a changing `key`
+ * (per compilation) so a fresh tool remounts this component with a fresh draft.
+ */
+export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
+  const [draft, setDraft] = useState<CompiledTool>(() => normalize(tool));
+
+  const schema = draft.inputSchema as CompiledToolSchema;
+  const validation = validateTool(draft);
+
+  function setName(name: string) {
+    setDraft((prev) => ({ ...prev, name }));
+  }
+  function setDescription(description: string) {
+    setDraft((prev) => ({ ...prev, description }));
+  }
+  function toggleRequired(name: string) {
+    setDraft((prev) => {
+      const schema = prev.inputSchema as CompiledToolSchema;
+      const required = new Set(schema.required ?? []);
+      if (required.has(name)) {
+        required.delete(name);
+      } else {
+        required.add(name);
+      }
+      return { ...prev, inputSchema: { ...schema, required: [...required] } };
+    });
+  }
+  function setDefault(name: string, raw: string) {
+    setDraft((prev) => {
+      const schema = prev.inputSchema as CompiledToolSchema;
+      const prop = schema.properties?.[name] ?? {};
+      const type = prop.type;
+      const value =
+        type === 'number' && raw !== '' && !Number.isNaN(Number(raw)) ? Number(raw) : raw;
+      return {
+        ...prev,
+        inputSchema: { ...schema, properties: { ...schema.properties, [name]: { ...prop, default: value } } },
+      };
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-medium">Compiled tool</h2>
+        {validation.ok ? (
+          <Badge variant="secondary">valid</Badge>
+        ) : (
+          <Badge variant="destructive">invalid</Badge>
+        )}
+      </div>
+      {!validation.ok && <p className="text-xs text-destructive">{validation.error}</p>}
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="tool-name" className="text-sm font-medium">
+          Name
+        </label>
+        <Input
+          id="tool-name"
+          value={draft.name}
+          onChange={(e) => setName(e.target.value)}
+          className="font-mono text-xs"
+          autoComplete="off"
+          spellCheck={false}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="tool-description" className="text-sm font-medium">
+          Description
+        </label>
+        <Textarea
+          id="tool-description"
+          value={draft.description}
+          onChange={(e) => setDescription(e.target.value)}
+          maxLength={500}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-medium">Parameters</p>
+        {Object.entries(schema.properties ?? {}).map(([name, prop]) => (
+          <div
+            key={name}
+            className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 px-3 py-2"
+          >
+            <span className="font-mono text-xs">{name}</span>
+            <Badge variant="outline">{prop.type ?? 'any'}</Badge>
+            <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                className="size-3.5 accent-[var(--primary)]"
+                checked={(schema.required ?? []).includes(name)}
+                onChange={() => toggleRequired(name)}
+              />
+              required
+            </label>
+            <Input
+              aria-label={`default for ${name}`}
+              placeholder="default"
+              value={prop.default === undefined ? '' : String(prop.default)}
+              onChange={(e) => setDefault(name, e.target.value)}
+              className="h-6 w-36 text-xs"
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-medium">Steps ({draft.steps.length})</p>
+        <ol className="flex flex-col gap-1 rounded-lg bg-muted/50 p-3 font-mono text-xs">
+          {draft.steps.map((step, i) => (
+            <li key={`${step.intent}-${i}`}>
+              <span className="text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>{' '}
+              {formatStep(step)}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button variant="outline" onClick={onRecompile}>
+          Re-compile
+        </Button>
+        <Button disabled title="Saving lands in the next build">
+          Save &amp; register
+        </Button>
+        <span className="text-xs text-muted-foreground">Saving arrives in the next build.</span>
+      </div>
+    </div>
+  );
+}
