@@ -1,20 +1,20 @@
-import { getDb } from '@/lib/db';
 import { runApprenticeTurn, type ApprenticeTurnResult } from '@/lib/apprentice';
-import { createToolExecutor } from '@/lib/tool-executor-http';
-import { getTaughtTools } from '@/lib/queries';
+import { createToolExecutor, fetchPublishedTools } from '@/lib/tool-executor-http';
 
 /**
  * Server-side orchestration for Modo Aprendiz. Extracted from the HTTP route so
  * the security boundary is STRUCTURAL, not just documented: the route
  * (src/app/api/apprentice/route.ts) is a thin adapter that only parses/validates
- * the request body and maps results; this module owns the env read and the db
- * SELECT for taught tools.
+ * the request body and maps results; this module owns the env read.
  *
- * The execute path has NO in-process SQL reach at all: tools run through the
- * same validated HTTP seam the browser bridge uses (createToolExecutor,
- * baseUrl = request origin → GET /api/catalog, POST /api/orders channel
- * 'agent'). The orders write path (createOrder) is reachable only from the
- * /api/orders route.
+ * ZERO db reach — in-process SQL is structurally absent from this module:
+ * - tools: fetched over HTTP from the SAME public, CORS-open /api/tools
+ *   endpoint external agents consume (fetchPublishedTools)
+ * - execution: the same validated HTTP seam the browser bridge uses
+ *   (createToolExecutor, baseUrl = request origin → GET /api/catalog,
+ *   POST /api/orders channel 'agent')
+ *
+ * Its only inputs are: env key → OpenAI fetch, tools → HTTP, executor → HTTP.
  *
  * The audited chain (see SECURITY.md at the repo root):
  *   history → OpenAI (chat) → tool_calls args → clampToolArgs (bounded)
@@ -63,12 +63,13 @@ export function parseHistory(
 }
 
 /**
- * One full apprentice turn, server-side. Reads OPENAI_API_KEY and the taught
- * tools (SELECT via getTaughtTools); tool execution happens over HTTP against
- * the same origin — exactly like the browser bridge.
+ * One full apprentice turn, server-side. Reads OPENAI_API_KEY, then the tools
+ * list and every tool execution happen over HTTP against the same origin —
+ * exactly like the browser bridge and external agents.
  *
- * Throws on: missing key (friendly message, before any db/fetch work), db
- * failure, or OpenAI failure — the route maps every throw to 500 {error}.
+ * Throws on: missing key (friendly message, before any fetch work), tools
+ * fetch failure, or OpenAI failure — the route maps every throw to
+ * 500 {error}.
  */
 export async function handleApprenticeTurn(
   history: ValidatedHistory,
@@ -79,10 +80,8 @@ export async function handleApprenticeTurn(
     throw new Error('OPENAI_API_KEY is not configured on the server');
   }
 
-  const db = getDb();
-  // same published-tools query as GET /api/tools — one implementation (R5)
-  const tools = await getTaughtTools(db, false);
-  // the ONE execute path, over HTTP: no in-process SQL in the LLM loop's reach
+  // the SAME public tools list external agents consume — via HTTP, not db
+  const tools = await fetchPublishedTools(origin, globalThis.fetch);
   const execute = createToolExecutor({ baseUrl: origin, tools, fetchImpl: globalThis.fetch });
 
   return runApprenticeTurn({

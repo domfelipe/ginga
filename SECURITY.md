@@ -45,16 +45,19 @@ Grep-audited repo-wide on 2026-08-29: query sites exist only in
 `src/app/api/health/route.ts`; `neon(` appears only in `src/lib/db.ts`; no
 `.query(` / `db(` string-call sites exist.
 
-The LLM loop has **no in-process SQL reach at all**: the apprentice chain
-(`src/lib/apprentice.ts` + `src/lib/apprentice-server.ts`) contains no
-`createOrder` import and no db write. Tool execution goes through the same
-validated HTTP seam the browser bridge uses (`createToolExecutor` in
-`src/lib/tool-executor-http.ts`, baseUrl = request origin → GET /api/catalog,
-POST /api/orders channel 'agent'); the only db read left in the chain is the
-`getTaughtTools` SELECT. Scanner advisories claiming "sql-injection entry" on
+The LLM loop has **no in-process SQL reach at all — not even a read**. The
+apprentice chain (`src/lib/apprentice.ts` + `src/lib/apprentice-server.ts`)
+imports no db symbol anywhere: the tools list itself is consumed over HTTP from
+the SAME public, CORS-open `/api/tools` endpoint external agents use
+(`fetchPublishedTools` — one parser shared with the browser bridge), and tool
+execution goes through the same validated HTTP seam (`createToolExecutor`,
+baseUrl = request origin → GET /api/catalog, POST /api/orders channel 'agent').
+Its only inputs are: env key → OpenAI fetch, tools → HTTP, executor → HTTP.
+Scanner advisories claiming "sql-injection entry" on
 `runApprenticeTurn`/`/api/apprentice` are therefore structurally impossible,
 not just audited away: orders SQL (tagged-template bound params in
-`src/lib/orders.ts`) is reachable only from the `/api/orders` route.
+`src/lib/orders.ts`) is reachable only from the `/api/orders` route, and the
+taught-tools SELECT only from the `/api/tools` route.
 
 ## LLM outputs are never trusted
 

@@ -4,6 +4,7 @@ import { buildExecute } from '@/lib/webmcp';
 import {
   clampToolArgs,
   createToolExecutor,
+  fetchPublishedTools,
   MAX_ARG_STRING,
 } from '@/lib/tool-executor-http';
 import type { TaughtTool } from '@/lib/types';
@@ -193,6 +194,30 @@ describe('createToolExecutor — untrusted tool-args clamp', () => {
     };
     expect(arr.list).toHaveLength(50);
     expect(clampToolArgs({ __proto__: { evil: true }, a: 1 })).toEqual({ a: 1 });
+  });
+});
+
+describe('fetchPublishedTools — shared tools-list parser (both surfaces)', () => {
+  it('GETs {baseUrl}/api/tools and parses the published list', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ tools: [makeTool()] }));
+    const tools = await fetchPublishedTools('http://srv.test', fetchMock as unknown as typeof globalThis.fetch);
+    expect(tools).toEqual([makeTool()]);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe('http://srv.test/api/tools');
+  });
+
+  it('rejects non-ok responses with a readable error', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(new Response('db down', { status: 500 }));
+    await expect(
+      fetchPublishedTools('', fetchMock as unknown as typeof globalThis.fetch),
+    ).rejects.toThrow('failed to load tools (status 500)');
+  });
+
+  it('returns an empty list for a malformed payload', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(Response.json({ nope: true }));
+    const tools = await fetchPublishedTools('', fetchMock as unknown as typeof globalThis.fetch);
+    expect(tools).toEqual([]);
   });
 });
 

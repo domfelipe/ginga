@@ -102,6 +102,23 @@ async function fetchCatalog(
 }
 
 /**
+ * Fetch the published tools list from {baseUrl}/api/tools — the SAME public,
+ * CORS-open endpoint external agents consume. One parser for BOTH surfaces
+ * (browser bridge via baseUrl '' and the server apprentice via the request
+ * origin), so the TaughtTool shape is identical everywhere. The server
+ * apprentice therefore needs no db access at all.
+ */
+export async function fetchPublishedTools(
+  baseUrl: string,
+  fetchImpl: typeof globalThis.fetch = globalThis.fetch,
+): Promise<TaughtTool[]> {
+  const res = await fetchImpl(`${baseUrl}/api/tools`);
+  if (!res.ok) throw new Error(`failed to load tools (status ${res.status})`);
+  const data = (await res.json().catch(() => null)) as { tools?: TaughtTool[] } | null;
+  return Array.isArray(data?.tools) ? (data.tools as TaughtTool[]) : [];
+}
+
+/**
  * Build an executor for the given taught tools. Success resolves with the
  * shared order-confirmation text (formatOrderResultText over the SERVER's
  * authoritative response); any failure throws with a readable message:

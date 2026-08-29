@@ -9,7 +9,7 @@ import {
   type FoldedItem,
   type FoldedOrder,
 } from './tool-executor';
-import { createToolExecutor } from './tool-executor-http';
+import { createToolExecutor, fetchPublishedTools } from './tool-executor-http';
 
 export {
   foldSteps,
@@ -109,22 +109,16 @@ export function buildExecute(tool: TaughtTool): ToolRegistryEntry['execute'] {
 
 // --- registration --------------------------------------------------------------
 
-async function fetchPublishedTools(): Promise<TaughtTool[]> {
-  const res = await fetch('/api/tools');
-  if (!res.ok) throw new Error(`failed to load tools (status ${res.status})`);
-  const data = (await res.json()) as { tools?: TaughtTool[] };
-  return Array.isArray(data.tools) ? data.tools : [];
-}
-
 /**
  * Load published tools and (re)register them. Always repopulates the shared
  * registry (apprentice fallback uses the SAME execute); registers with
  * document.modelContext when the runtime exists. real=true means a live WebMCP
  * runtime received the tools. Dynamic: call again to pick up new tools — no
- * page reload needed.
+ * page reload needed. Uses the shared fetchPublishedTools parser (same public
+ * /api/tools endpoint and TaughtTool mapping as the server apprentice).
  */
 export async function registerAllTools(): Promise<{ registered: number; real: boolean }> {
-  const tools = await fetchPublishedTools();
+  const tools = await fetchPublishedTools('');
   const modelContext = getModelContext();
 
   registry.length = 0; // replace, never duplicate

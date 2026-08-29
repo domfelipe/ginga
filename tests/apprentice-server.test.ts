@@ -1,12 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// the no-key path must fail BEFORE any db access; swap the db module so any
-// premature reach is loud
-const dbMock = vi.fn<(...args: unknown[]) => unknown>(() => {
-  throw new Error('db must not be touched without a key');
-});
-vi.mock('@/lib/db', () => ({ getDb: () => dbMock }));
-
 import { handleApprenticeTurn, parseHistory } from '@/lib/apprentice-server';
 
 const hadOpenAiKey = process.env.OPENAI_API_KEY;
@@ -18,52 +11,56 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+const OPENAI = 'https://api.openai.com/v1/chat/completions';
+const ORIGIN = 'http://local.test';
+
+const publishedTool = {
+  id: 't1',
+  store_id: 's1',
+  name: 'order_pao_de_queijo',
+  description: 'Order pao de queijo by the dozen for delivery',
+  inputSchema: {
+    type: 'object',
+    properties: { qty: { type: 'number', default: 1 }, deliveryDate: { type: 'string' } },
+    required: ['qty'],
+  },
+  steps: [
+    { intent: 'add_item', params: { sku: 'pao-queijo-duzia', qty: '{{qty}}' } },
+    { intent: 'set_delivery', params: { date: '{{deliveryDate}}' } },
+  ],
+  published: true,
+  created_at: '2026-08-28T00:00:00.000Z',
+};
+
 describe('handleApprenticeTurn — security boundary', () => {
-  it('throws the friendly missing-key error before any db access when OPENAI_API_KEY is unset', async () => {
+  it('throws the friendly missing-key error before ANY fetch (tools included)', async () => {
     delete process.env.OPENAI_API_KEY;
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
     await expect(
-      handleApprenticeTurn([{ role: 'user', content: 'order a dozen pao de queijo' }], 'http://local.test'),
+      handleApprenticeTurn([{ role: 'user', content: 'order a dozen pao de queijo' }], ORIGIN),
     ).rejects.toThrow('OPENAI_API_KEY is not configured on the server');
-    expect(dbMock).not.toHaveBeenCalled();
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('executes tools over HTTP against the request origin (no in-process SQL in the loop)', async () => {
+  it('consumes the public tools list via HTTP and executes tools over the same origin', async () => {
     process.env.OPENAI_API_KEY = 'test-env-key';
-    // getTaughtTools (SELECT) still reads the db — the only sql reach left
-    dbMock.mockResolvedValueOnce([
-      {
-        id: 't1',
-        store_id: 's1',
-        name: 'order_pao_de_queijo',
-        description: 'Order pao de queijo by the dozen for delivery',
-        input_schema: {
-          type: 'object',
-          properties: { qty: { type: 'number', default: 1 }, deliveryDate: { type: 'string' } },
-          required: ['qty'],
-        },
-        steps: [
-          { intent: 'add_item', params: { sku: 'pao-queijo-duzia', qty: '{{qty}}' } },
-          { intent: 'set_delivery', params: { date: '{{deliveryDate}}' } },
-        ],
-        published: true,
-        created_at: '2026-08-28T00:00:00.000Z',
-      },
-    ]);
-
-    const OPENAI = 'https://api.openai.com/v1/chat/completions';
     const requestedUrls: string[] = [];
     let openaiCalls = 0;
     const orderBodies: string[] = [];
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       requestedUrls.push(url);
-      if (url === 'http://local.test/api/catalog') {
+      if (url === `${ORIGIN}/api/tools`) {
+        return Response.json({ tools: [publishedTool] });
+      }
+      if (url === `${ORIGIN}/api/catalog`) {
         return Response.json({
           ok: true,
           items: [{ sku: 'pao-queijo-duzia', name: 'Pao de Queijo (dozen)', price_cents: 1500 }],
         });
       }
-      if (url === 'http://local.test/api/orders') {
+      if (url === `${ORIGIN}/api/orders`) {
         orderBodies.push(String(init?.body));
         return Response.json(
           {
@@ -105,7 +102,7 @@ describe('handleApprenticeTurn — security boundary', () => {
 
     const result = await handleApprenticeTurn(
       [{ role: 'user', content: 'order a dozen pao de queijo for Friday' }],
-      'http://local.test',
+      ORIGIN,
     );
     // the tool result fed back to the model quotes the HTTP orders response
     expect(result.reply).toBe('Done!');
@@ -116,12 +113,13 @@ describe('handleApprenticeTurn — security boundary', () => {
         resultText: 'Order #ord-9 created: 1x Pao de Queijo (dozen), deliver 2026-09-05. Total $15.00.',
       },
     ]);
-    // HTTP seam, in order: OpenAI → catalog GET + orders POST against the
-    // origin (tool execution) → OpenAI again for the final reply
+    // every network hop is HTTP against the origin — no db anywhere in the loop:
+    // tools list → OpenAI → catalog GET + orders POST → OpenAI final reply
     expect(requestedUrls).toEqual([
+      `${ORIGIN}/api/tools`,
       OPENAI,
-      'http://local.test/api/catalog',
-      'http://local.test/api/orders',
+      `${ORIGIN}/api/catalog`,
+      `${ORIGIN}/api/orders`,
       OPENAI,
     ]);
     // the POST body that left the process matches the browser-bridge shape
@@ -131,6 +129,20 @@ describe('handleApprenticeTurn — security boundary', () => {
       channel: 'agent',
       toolName: 'order_pao_de_queijo',
     });
+  });
+
+  it('propagates a tools-fetch failure as a readable error', async () => {
+    process.env.OPENAI_API_KEY = 'test-env-key';
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input) === `${ORIGIN}/api/tools`) {
+        return new Response('db down', { status: 500 });
+      }
+      throw new Error(`unexpected fetch: ${String(input)}`);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(
+      handleApprenticeTurn([{ role: 'user', content: 'hi' }], ORIGIN),
+    ).rejects.toThrow('failed to load tools (status 500)');
   });
 });
 
