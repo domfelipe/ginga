@@ -140,19 +140,34 @@ export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
 
   const hasInvalidDefault = Object.values(schema.properties ?? {}).some(defaultIsInvalid);
 
+  /* Compile theatre: entrance choreography on each fresh compile (the parent
+     remounts us via key={compileCount}, which replays the CSS animations).
+     Chips stagger in 80ms apart; the valid badge stamps in after the last
+     chip (capped so the whole entrance stays under ~900ms). The global
+     prefers-reduced-motion kill zeroes duration and delay, so every element
+     simply appears in place. Presentational only — no logic touched. */
+  const chipCount = Object.keys(schema.properties ?? {}).length;
+  const stampDelayMs = Math.min(200 + chipCount * 80, 550);
+
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-soft">
+    <div className="animate-tool-assemble flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-soft">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-base font-semibold tracking-tight">Compiled tool</h2>
         {validation.ok ? (
-          <Badge variant="secondary">valid</Badge>
+          <Badge
+            variant="secondary"
+            className="animate-stamp-seal"
+            style={{ animationDelay: `${stampDelayMs}ms` }}
+          >
+            valid
+          </Badge>
         ) : (
           <Badge variant="destructive">invalid</Badge>
         )}
       </div>
       {!validation.ok && <p className="text-xs text-destructive">{validation.error}</p>}
 
-      <div className="flex flex-col gap-1.5">
+      <div className="animate-name-reveal flex flex-col gap-1.5">
         <label htmlFor="tool-name" className="text-sm font-medium">
           Name
         </label>
@@ -180,10 +195,11 @@ export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
 
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium">Parameters</p>
-        {Object.entries(schema.properties ?? {}).map(([name, prop]) => (
+        {Object.entries(schema.properties ?? {}).map(([name, prop], i) => (
           <div
             key={name}
-            className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2"
+            className="animate-badge-pop flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2"
+            style={{ animationDelay: `${i * 80}ms` }}
           >
             {(schema.required ?? []).includes(name) && (
               <span aria-hidden className="size-1.5 rounded-full bg-primary" />
