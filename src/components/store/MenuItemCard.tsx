@@ -28,18 +28,22 @@ export function MenuItemCard({ sku, name, description, priceCents, emoji }: Menu
   }, [sku]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          <span aria-hidden className="mr-1.5 text-lg">
-            {emoji}
-          </span>
-          {name}
-        </CardTitle>
+    <Card className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift hover:ring-primary/40">
+      <CardHeader className="grid grid-cols-[auto_1fr] items-center gap-3">
+        {/* bakery shelf tag: product emoji in a warm circular chip */}
+        <span
+          aria-hidden
+          className="flex size-11 items-center justify-center rounded-full bg-accent text-xl"
+        >
+          {emoji}
+        </span>
+        <CardTitle className="font-semibold tracking-tight">{name}</CardTitle>
       </CardHeader>
-      <CardContent className="text-muted-foreground">{description}</CardContent>
-      <CardFooter className="justify-between">
-        <span className="font-medium">{formatUSD(priceCents)}</span>
+      <CardContent className="text-sm text-muted-foreground">{description}</CardContent>
+      <CardFooter className="justify-between gap-2">
+        <span className="rounded-full bg-secondary px-2.5 py-1 text-sm font-semibold tabular-nums text-secondary-foreground">
+          {formatUSD(priceCents)}
+        </span>
         <AddToCartButton item={{ sku, name, price_cents: priceCents, emoji }} />
       </CardFooter>
     </Card>

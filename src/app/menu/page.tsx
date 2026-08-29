@@ -35,9 +35,17 @@ export default async function MenuPage() {
 
   return (
     <div className="mx-auto w-full max-w-4xl px-6 py-12">
-      <header className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Menu</h1>
-        <Link href="/cart" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+      <header className="mb-8 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Menu</h1>
+          <p className="text-sm text-muted-foreground">
+            Fresh from the oven — order as yourself, or let an agent do it.
+          </p>
+        </div>
+        <Link
+          href="/cart"
+          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
+        >
           Go to cart
         </Link>
       </header>
@@ -67,3 +75,4 @@ export default async function MenuPage() {
     </div>
   );
 }
+

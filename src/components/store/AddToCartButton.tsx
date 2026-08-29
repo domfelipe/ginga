@@ -17,7 +17,7 @@ export function AddToCartButton({ item }: AddToCartButtonProps) {
   }
 
   return (
-    <Button size="sm" onClick={handleAdd} aria-label={`Add ${item.name} to cart`}>
+    <Button size="sm" className="rounded-full px-4" onClick={handleAdd} aria-label={`Add ${item.name} to cart`}>
       Add
     </Button>
   );
