@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GingaProvider } from "@/components/provider/GingaProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,6 +18,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Ginga — Padaria Aurora",
   description: "Teach AI agents by showing, not coding",
+  openGraph: {
+    title: "Ginga — Padaria Aurora",
+    description:
+      "Order like a human; agents learn. Record a flow once and Ginga turns it into a live WebMCP tool any site or agent can call.",
+    url: SITE_URL,
+    type: "website",
+    siteName: "Ginga",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

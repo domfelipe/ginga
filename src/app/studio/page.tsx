@@ -1,5 +1,6 @@
 import { ApprenticePanel } from '@/components/studio/ApprenticePanel';
 import { RecordPanel } from '@/components/studio/RecordPanel';
+import { TaughtToolsList } from '@/components/studio/TaughtToolsList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const metadata = {
@@ -18,12 +19,16 @@ export default function StudioPage() {
         <TabsList>
           <TabsTrigger value="teach">Teach</TabsTrigger>
           <TabsTrigger value="apprentice">Apprentice</TabsTrigger>
+          <TabsTrigger value="tools">Tools</TabsTrigger>
         </TabsList>
         <TabsContent value="teach">
           <RecordPanel />
         </TabsContent>
         <TabsContent value="apprentice">
           <ApprenticePanel />
+        </TabsContent>
+        <TabsContent value="tools">
+          <TaughtToolsList />
         </TabsContent>
       </Tabs>
     </div>

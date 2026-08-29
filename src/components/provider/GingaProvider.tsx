@@ -41,6 +41,11 @@ export function GingaProvider({ children }: { children: ReactNode }) {
   const refreshTools = useCallback(async () => {
     try {
       const { registered, real } = await registerAllTools();
+      // studio surfaces (TaughtToolsList) re-fetch on this event — keeps the
+      // owner UI in sync with what agents see without prop drilling
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('ginga:tools-updated'));
+      }
       if (real) {
         toast.success(`${registered} tools live for agents`);
       } else {
