@@ -160,7 +160,13 @@ export async function POST(req: Request) {
       returning id
     `;
 
-    return Response.json({ orderId: row.id }, { status: 201 });
+    // items/totalCents are additive since Task 7: the agent execute path quotes
+    // the server-authoritative order in its CallToolResult text (no client-side
+    // pricing duplication). orderId remains the only field the cart consumes.
+    return Response.json(
+      { orderId: row.id, items, totalCents: totalCents },
+      { status: 201 },
+    );
   } catch (err) {
     return Response.json(
       { ok: false, error: err instanceof Error ? err.message : 'unknown error' },

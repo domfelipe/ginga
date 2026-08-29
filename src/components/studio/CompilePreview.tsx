@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 
+import { useGingaTools } from '@/components/provider/GingaProvider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,16 +42,51 @@ function normalize(tool: CompiledTool): CompiledTool {
 /**
  * Editable review of the compiled tool: name, description, schema properties
  * (required toggle + default) and a read-only summary of the steps.
- * "Save & register" is a visible placeholder — persistence lands in Task 7.
+ * "Save & register" persists the tool and triggers dynamic WebMCP
+ * re-registration (no reload).
  *
  * State is initialized from props once; the parent must pass a changing `key`
  * (per compilation) so a fresh tool remounts this component with a fresh draft.
  */
 export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
   const [draft, setDraft] = useState<CompiledTool>(() => normalize(tool));
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const { refreshTools } = useGingaTools();
 
   const schema = draft.inputSchema as CompiledToolSchema;
   const validation = validateTool(draft);
+
+  async function handleSave() {
+    if (!validation.ok || saving || saved) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/tools', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool: draft }),
+      });
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (res.status === 409) {
+        // R3: duplicate tool name for the store
+        toast.error('Tool name already taken', {
+          description: data?.error ?? 'Rename the tool and save again.',
+        });
+        return;
+      }
+      if (!res.ok) {
+        toast.error(data?.error ?? `saving failed with status ${res.status}`);
+        return;
+      }
+      setSaved(true);
+      toast.success(`"${draft.name}" saved`);
+      await refreshTools(); // re-register dynamically — no reload
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'network error while saving tool');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   function setName(name: string) {
     setDraft((prev) => ({ ...prev, name }));
@@ -166,10 +203,14 @@ export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
         <Button variant="outline" onClick={onRecompile}>
           Re-compile
         </Button>
-        <Button disabled title="Saving lands in the next build">
-          Save &amp; register
+        <Button onClick={handleSave} disabled={!validation.ok || saving || saved}>
+          {saved ? 'Saved ✓' : saving ? 'Saving…' : 'Save & register'}
         </Button>
-        <span className="text-xs text-muted-foreground">Saving arrives in the next build.</span>
+        {!saved && (
+          <span className="text-xs text-muted-foreground">
+            Saved tools go live for agents immediately.
+          </span>
+        )}
       </div>
     </div>
   );
