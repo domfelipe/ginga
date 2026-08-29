@@ -63,6 +63,7 @@
   --animate-tool-assemble: tool-assemble 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-name-reveal: name-reveal 0.45s cubic-bezier(0.65, 0, 0.35, 1) 0.1s both;
   --animate-stamp-seal: stamp-seal 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+  --animate-stamp-hit: stamp-hit 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
 }
 
 @keyframes rec-pulse {
@@ -138,20 +139,25 @@
   }
 }
 
-/* Agent stamp hitting the kitchen ticket — one-shot on mount. Ends exactly at
-   the static -rotate-2 of the badge so motion and rest state agree. */
+/* Agent stamp hitting the kitchen ticket — one-shot on mount. Animates the
+   individual rotate/scale properties (Tailwind v4 sets -rotate-2 as the
+   `rotate` property) so the 100% frame is exactly the badge's static rest
+   state — motion and rest agree, and the human stamp is untouched. */
 @keyframes stamp-hit {
   0% {
     opacity: 0;
-    transform: scale(1.4) rotate(-8deg);
+    rotate: -8deg;
+    scale: 1.4;
   }
   55% {
     opacity: 1;
-    transform: scale(0.96) rotate(-1.5deg);
+    rotate: -1deg;
+    scale: 0.96;
   }
   100% {
     opacity: 1;
-    transform: scale(1) rotate(-2deg);
+    rotate: -2deg;
+    scale: 1;
   }
 }
 

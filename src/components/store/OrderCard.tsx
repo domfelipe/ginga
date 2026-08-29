@@ -7,7 +7,9 @@ import type { OrderRow } from '@/lib/types';
 function ChannelStamp({ order }: { order: OrderRow }) {
   if (order.channel === 'agent') {
     return (
-      <span className="inline-flex -rotate-2 items-center gap-1 rounded-sm border-2 border-primary/70 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary">
+      // stamp-hit: one-shot stamp-in on mount (new ticket arriving on the
+      // wall); reduced motion lands it instantly at the same rest state
+      <span className="animate-stamp-hit inline-flex -rotate-2 items-center gap-1 rounded-sm border-2 border-primary/70 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary">
         <span aria-hidden>🤖</span>
         agent · {order.tool_name ?? 'unknown'}
       </span>
