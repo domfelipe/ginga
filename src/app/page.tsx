@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { Bot, MousePointerClick, Wrench } from 'lucide-react';
 
+import { RodaMark } from '@/components/design/RodaMark';
 import { TaughtToolsBadge } from '@/components/home/TaughtToolsBadge';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -26,9 +27,17 @@ const STEPS = [
 
 export default function Home() {
   return (
-    <div className="relative flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
+    <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 py-24 text-center">
       {/* warm light behind the hero — decorative only */}
       <div aria-hidden className="hero-wash pointer-events-none absolute inset-x-0 top-0 h-[28rem]" />
+
+      {/* the roda — Ginga's signature circle holding the whole scene, barely there */}
+      <RodaMark
+        aria-hidden
+        dashed
+        weight={0.4}
+        className="pointer-events-none absolute left-1/2 top-1/2 size-[30rem] -translate-x-1/2 -translate-y-1/2 text-primary opacity-[0.07] sm:size-[42rem]"
+      />
 
       <div className="relative flex flex-col items-center gap-6">
         <TaughtToolsBadge />
@@ -76,17 +85,20 @@ export default function Home() {
           ))}
         </ol>
 
-        <footer className="mt-14 border-t border-border pt-6 text-xs text-muted-foreground">
-          Built for the{' '}
-          <a
-            href="https://openai.com/"
-            className="underline underline-offset-2 transition-colors hover:text-foreground"
-            target="_blank"
-            rel="noreferrer"
-          >
-            OpenAI WebMCP Challenge
-          </a>{' '}
-          — Ginga · DomHubs
+        <footer className="mt-14 flex items-center gap-2 border-t border-border pt-6 text-xs text-muted-foreground">
+          <RodaMark weight={11} center className="size-3.5 shrink-0 text-terracotta/70" />
+          <span>
+            Built for the{' '}
+            <a
+              href="https://openai.com/"
+              className="underline underline-offset-2 transition-colors hover:text-foreground"
+              target="_blank"
+              rel="noreferrer"
+            >
+              OpenAI WebMCP Challenge
+            </a>{' '}
+            — Ginga · DomHubs
+          </span>
         </footer>
       </div>
     </div>

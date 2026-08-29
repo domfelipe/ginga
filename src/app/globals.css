@@ -55,10 +55,14 @@
   /* Soft, warm-tinted shadow system (low opacity, espresso hue). */
   --shadow-soft: 0 1px 2px oklch(0.25 0.04 55 / 0.05), 0 6px 20px -6px oklch(0.25 0.04 55 / 0.1);
   --shadow-lift: 0 2px 4px oklch(0.25 0.04 55 / 0.06), 0 14px 32px -10px oklch(0.25 0.04 55 / 0.16);
-  /* Motion primitives (REC pulse, badge pop). All disabled under
-     prefers-reduced-motion below. */
+  /* Motion primitives (REC pulse, badge pop, roda ring, compile theatre).
+     All disabled under prefers-reduced-motion below. */
   --animate-rec-pulse: rec-pulse 1.6s ease-in-out infinite;
   --animate-badge-pop: badge-pop 0.35s ease-out both;
+  --animate-roda-pulse: roda-pulse 1.8s ease-out infinite;
+  --animate-tool-assemble: tool-assemble 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-name-reveal: name-reveal 0.45s cubic-bezier(0.65, 0, 0.35, 1) 0.1s both;
+  --animate-stamp-seal: stamp-seal 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
 }
 
 @keyframes rec-pulse {
@@ -82,6 +86,72 @@
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+/* Roda ring breathing outward from the REC dot — the "live" registration ring. */
+@keyframes roda-pulse {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* Compile theatre: the tool card arrives, the name writes itself, the valid
+   badge lands like a kitchen stamp. Entrance only — ends at natural state. */
+@keyframes tool-assemble {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes name-reveal {
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes stamp-seal {
+  0% {
+    opacity: 0;
+    transform: scale(1.4) rotate(-10deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.96) rotate(-1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Agent stamp hitting the kitchen ticket — one-shot on mount. Ends exactly at
+   the static -rotate-2 of the badge so motion and rest state agree. */
+@keyframes stamp-hit {
+  0% {
+    opacity: 0;
+    transform: scale(1.4) rotate(-8deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.96) rotate(-1.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-2deg);
   }
 }
 
@@ -171,12 +241,15 @@
     @apply font-sans;
   }
   /* Motion off when the user asks for it: kills hover lifts, REC pulse,
-     badge pop and ping dots everywhere. */
+     badge pop and ping dots everywhere. animation-delay also goes to zero so
+     "both"-fill entrance animations land on their final state instantly
+     instead of sitting hidden through their stagger delay. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-delay: 0s !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;

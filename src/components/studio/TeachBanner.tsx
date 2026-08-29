@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 
 import { useRecorder } from '@/components/provider/RecorderProvider';
+import { RodaMark } from '@/components/design/RodaMark';
 import { Button } from '@/components/ui/button';
 
 /**
@@ -24,10 +25,11 @@ export function TeachBanner() {
   return (
     <div className="fixed inset-x-0 top-0 z-50 flex h-11 items-center justify-between gap-3 bg-destructive px-4 text-white shadow-md dark:bg-[color-mix(in_oklch,var(--destructive)_72%,black)]">
       <p className="flex items-center gap-2 text-sm font-medium">
-        {/* recording light — CSS pulse, disabled under prefers-reduced-motion */}
-        <span aria-hidden className="relative flex size-2.5">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-60" />
-          <span className="relative inline-flex size-2.5 animate-rec-pulse rounded-full bg-white" />
+        {/* recording light — roda ring breathing around the dot; pulse is CSS
+            only and collapses to a static dot under prefers-reduced-motion */}
+        <span aria-hidden className="relative flex size-3 items-center justify-center">
+          <RodaMark className="absolute inset-0 size-full animate-roda-pulse text-white" weight={9} />
+          <span className="relative inline-flex size-2 animate-rec-pulse rounded-full bg-white" />
         </span>
         REC — demonstrating…
         <span className="rounded-full bg-black/20 px-2 py-0.5 text-xs font-semibold tabular-nums">
