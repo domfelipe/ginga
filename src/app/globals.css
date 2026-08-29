@@ -11,7 +11,10 @@
      --font-sans previously pointed at itself, so the sans stack never applied. */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-geist-sans);
+  /* Design pass: Fraunces carries every heading (hero, page titles, card
+     titles, studio section heads). Body/UI stays Geist. */
+  --font-heading: var(--font-fraunces);
+  --font-display: var(--font-fraunces);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -31,6 +34,7 @@
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
+  --color-terracotta: var(--terracotta);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -48,78 +52,112 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Soft, warm-tinted shadow system (low opacity, espresso hue). */
+  --shadow-soft: 0 1px 2px oklch(0.25 0.04 55 / 0.05), 0 6px 20px -6px oklch(0.25 0.04 55 / 0.1);
+  --shadow-lift: 0 2px 4px oklch(0.25 0.04 55 / 0.06), 0 14px 32px -10px oklch(0.25 0.04 55 / 0.16);
+  /* Motion primitives (REC pulse, badge pop). All disabled under
+     prefers-reduced-motion below. */
+  --animate-rec-pulse: rec-pulse 1.6s ease-in-out infinite;
+  --animate-badge-pop: badge-pop 0.35s ease-out both;
+}
+
+@keyframes rec-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.4;
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 :root {
-  /* warm Brazilian bakery palette: cream surfaces, coffee-brown primary,
-     amber accents (discreto — same components, warmer tones) */
-  --background: oklch(0.994 0.007 90);
-  --foreground: oklch(0.17 0.015 60);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.17 0.015 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0.015 60);
-  --primary: oklch(0.34 0.06 55);
-  --primary-foreground: oklch(0.985 0.01 90);
-  --secondary: oklch(0.963 0.016 85);
-  --secondary-foreground: oklch(0.28 0.04 55);
-  --muted: oklch(0.963 0.013 85);
-  --muted-foreground: oklch(0.5 0.02 60);
-  --accent: oklch(0.955 0.032 90);
-  --accent-foreground: oklch(0.28 0.04 55);
+  /* "warm heritage meets modern tool": cream paper, bread-crust amber primary,
+     terracotta accent, espresso foreground. Warm hue family throughout. */
+  --background: oklch(0.982 0.014 92);
+  --foreground: oklch(0.22 0.025 55);
+  --card: oklch(0.995 0.006 92);
+  --card-foreground: oklch(0.22 0.025 55);
+  --popover: oklch(0.995 0.006 92);
+  --popover-foreground: oklch(0.22 0.025 55);
+  --primary: oklch(0.66 0.13 68);
+  --primary-foreground: oklch(0.24 0.05 50);
+  --secondary: oklch(0.945 0.028 88);
+  --secondary-foreground: oklch(0.32 0.05 50);
+  --muted: oklch(0.95 0.018 88);
+  --muted-foreground: oklch(0.48 0.028 60);
+  --accent: oklch(0.935 0.045 62);
+  --accent-foreground: oklch(0.35 0.07 45);
+  --terracotta: oklch(0.58 0.13 40);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.915 0.014 85);
-  --input: oklch(0.915 0.014 85);
-  --ring: oklch(0.72 0.11 85);
-  --chart-1: oklch(0.87 0.09 85);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: oklch(0.9 0.02 85);
+  --input: oklch(0.9 0.02 85);
+  --ring: oklch(0.66 0.13 68);
+  --chart-1: oklch(0.72 0.13 70);
+  --chart-2: oklch(0.58 0.13 40);
+  --chart-3: oklch(0.44 0.05 55);
+  --chart-4: oklch(0.37 0.035 55);
+  --chart-5: oklch(0.29 0.028 55);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.975 0.012 90);
+  --sidebar-foreground: oklch(0.22 0.025 55);
+  --sidebar-primary: oklch(0.66 0.13 68);
+  --sidebar-primary-foreground: oklch(0.24 0.05 50);
+  --sidebar-accent: oklch(0.945 0.028 88);
+  --sidebar-accent-foreground: oklch(0.32 0.05 50);
+  --sidebar-border: oklch(0.9 0.02 85);
+  --sidebar-ring: oklch(0.66 0.13 68);
 }
 
 .dark {
-  /* dark stays neutral-warm: same hue family as light, low chroma */
-  --background: oklch(0.16 0.012 60);
-  --foreground: oklch(0.985 0.008 90);
-  --card: oklch(0.215 0.014 60);
-  --card-foreground: oklch(0.985 0.008 90);
-  --popover: oklch(0.215 0.014 60);
-  --popover-foreground: oklch(0.985 0.008 90);
-  --primary: oklch(0.93 0.02 90);
-  --primary-foreground: oklch(0.24 0.03 55);
-  --secondary: oklch(0.275 0.016 60);
-  --secondary-foreground: oklch(0.985 0.008 90);
-  --muted: oklch(0.275 0.014 60);
-  --muted-foreground: oklch(0.72 0.015 80);
-  --accent: oklch(0.3 0.03 80);
-  --accent-foreground: oklch(0.985 0.008 90);
+  /* Dark stays in the same warm family: charcoal (never pure black), amber
+     reads brighter, espresso text becomes warm off-white. */
+  --background: oklch(0.185 0.014 60);
+  --foreground: oklch(0.94 0.015 85);
+  --card: oklch(0.235 0.016 60);
+  --card-foreground: oklch(0.94 0.015 85);
+  --popover: oklch(0.235 0.016 60);
+  --popover-foreground: oklch(0.94 0.015 85);
+  --primary: oklch(0.8 0.12 78);
+  --primary-foreground: oklch(0.23 0.05 55);
+  --secondary: oklch(0.28 0.02 65);
+  --secondary-foreground: oklch(0.93 0.015 85);
+  --muted: oklch(0.275 0.016 60);
+  --muted-foreground: oklch(0.72 0.025 75);
+  --accent: oklch(0.31 0.035 55);
+  --accent-foreground: oklch(0.93 0.015 85);
+  --terracotta: oklch(0.72 0.12 45);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: oklch(0.75 0.03 80 / 18%);
+  --input: oklch(0.75 0.03 80 / 22%);
+  --ring: oklch(0.72 0.11 75);
+  --chart-1: oklch(0.8 0.12 78);
+  --chart-2: oklch(0.72 0.12 45);
+  --chart-3: oklch(0.55 0.03 60);
+  --chart-4: oklch(0.42 0.025 60);
+  --chart-5: oklch(0.32 0.02 60);
+  --sidebar: oklch(0.235 0.016 60);
+  --sidebar-foreground: oklch(0.94 0.015 85);
+  --sidebar-primary: oklch(0.8 0.12 78);
+  --sidebar-primary-foreground: oklch(0.23 0.05 55);
+  --sidebar-accent: oklch(0.28 0.02 65);
+  --sidebar-accent-foreground: oklch(0.93 0.015 85);
+  --sidebar-border: oklch(0.75 0.03 80 / 18%);
+  --sidebar-ring: oklch(0.72 0.11 75);
 }
 
 @layer base {
@@ -131,5 +169,27 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Motion off when the user asks for it: kills hover lifts, REC pulse,
+     badge pop and ping dots everywhere. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Hero wash: quiet warm light behind the headline — amber from above,
+     a breath of terracotta off to the side. No hard gradients. */
+  .hero-wash {
+    background:
+      radial-gradient(42rem 26rem at 50% -8%, color-mix(in oklch, var(--primary) 18%, transparent), transparent 70%),
+      radial-gradient(28rem 20rem at 82% 22%, color-mix(in oklch, var(--terracotta) 10%, transparent), transparent 70%);
   }
 }
