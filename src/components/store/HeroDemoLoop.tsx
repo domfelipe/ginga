@@ -17,7 +17,7 @@ export function HeroDemoLoop() {
         className="pointer-events-none absolute -left-6 -top-6 size-[calc(100%+3rem)] text-terracotta opacity-20 sm:opacity-25"
       />
 
-      <div className="hl-stage relative h-[21rem]">
+      <div className="hl-stage relative h-[22.5rem] sm:h-[22rem]">
         {/* REC pill — mirrors the real TeachBanner while the ticket records */}
         <div className="hl-anim hl-rec absolute -top-1 right-0 z-20 inline-flex items-center gap-1.5 rounded-full bg-destructive px-2.5 py-1 text-[10px] font-semibold text-white shadow-soft dark:bg-[color-mix(in_oklch,var(--destructive)_72%,black)]">
           <span className="relative flex size-1.5">
@@ -25,10 +25,10 @@ export function HeroDemoLoop() {
             <span className="relative inline-flex size-1.5 animate-rec-pulse rounded-full bg-white" />
           </span>
           REC · step
-          <span className="relative inline-flex w-3 justify-center tabular-nums">
-            <span className="hl-anim hl-count-1 absolute inset-0">1</span>
-            <span className="hl-anim hl-count-2 absolute inset-0">2</span>
-            <span className="hl-anim hl-count-3 absolute inset-0">3</span>
+          <span className="relative inline-flex h-3.5 w-3 items-center justify-center">
+            <span className="hl-anim hl-count-1 absolute inset-0 flex items-center justify-center tabular-nums">1</span>
+            <span className="hl-anim hl-count-2 absolute inset-0 flex items-center justify-center tabular-nums">2</span>
+            <span className="hl-anim hl-count-3 absolute inset-0 flex items-center justify-center tabular-nums">3</span>
           </span>
         </div>
 
@@ -81,14 +81,14 @@ export function HeroDemoLoop() {
               <span className="rounded-full border border-border px-1.5 text-[9px] text-muted-foreground">
                 string
               </span>
-              <span className="ml-auto truncate font-mono text-[10px] text-terracotta">Friday</span>
+              <span className="ml-auto min-w-0 truncate font-mono text-[10px] text-terracotta">Friday</span>
             </div>
             <div className="hl-anim hl-chip-3 flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2 py-1">
               <span className="font-mono text-[10px]">note</span>
               <span className="rounded-full border border-border px-1.5 text-[9px] text-muted-foreground">
                 string
               </span>
-              <span className="ml-auto truncate font-mono text-[10px] text-terracotta">
+              <span className="ml-auto min-w-0 truncate font-mono text-[10px] text-terracotta">
                 “for Pedro’s party”
               </span>
             </div>
