@@ -98,7 +98,7 @@ export function validateTool(tool: CompiledTool): ValidationResult {
   }
 
   // every {{placeholder}} used in steps must be declared in inputSchema.properties
-  const serialized = JSON.stringify(tool.steps) ?? '';
+  const serialized = JSON.stringify(tool.steps);
   const used = new Set<string>(
     [...serialized.matchAll(PLACEHOLDER_RE)].map((match) => match[1]),
   );

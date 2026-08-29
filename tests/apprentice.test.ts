@@ -267,6 +267,31 @@ describe('runApprenticeTurn (mocked OpenAI fetch + mocked execute)', () => {
     expect(lastBody.tool_choice).toBe('none');
   });
 
+  it('terminates with a fallback reply when a hostile runtime keeps returning tool_calls', async () => {
+    // ignores tool_choice:'none' entirely — always answers with tool_calls
+    const alwaysToolCall = () =>
+      openaiResponse({
+        content: null,
+        tool_calls: [{ id: 'call_x', function: { name: 'order_pao_de_queijo', arguments: '{"qty":1}' } }],
+      });
+    const execute = vi.fn().mockResolvedValue('ok');
+    // more responses than the cap allows: the loop must stop on its own
+    const fetchMock = makeFetch([
+      alwaysToolCall(),
+      alwaysToolCall(),
+      alwaysToolCall(),
+      alwaysToolCall(),
+      alwaysToolCall(),
+    ]);
+    const result = await runApprenticeTurn(baseOpts(fetchMock, execute));
+
+    // structural break: MAX_TOOL_ROUNDS + 2 OpenAI calls, never more
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(execute).toHaveBeenCalledTimes(3);
+    expect(result.reply).toMatch(/too many tool rounds/i);
+    expect(result.toolCalls).toHaveLength(3);
+  });
+
   it('propagates executor errors as the tool result text and lets the model recover', async () => {
     const execute = vi.fn().mockRejectedValue(new Error('unknown sku: feijoada'));
     const fetchMock = makeFetch([

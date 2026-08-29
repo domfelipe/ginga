@@ -212,9 +212,10 @@ export interface ApprenticeTurnOptions {
  * One chat turn: system + history → OpenAI with the taught tools as functions.
  * If the model answers with tool_calls, each call is executed (up to
  * MAX_TOOL_ROUNDS rounds) and the results are fed back as role:'tool' messages
- * until a final natural-language reply arrives. Bounded: after MAX_TOOL_ROUNDS
- * the next request forces tool_choice:'none', so the loop always terminates
- * (≤ MAX_TOOL_ROUNDS + 1 OpenAI calls).
+ * until a final natural-language reply arrives. Bounded twice: after
+ * MAX_TOOL_ROUNDS the next request forces tool_choice:'none', and a structural
+ * break at the loop top returns a fallback reply if tool_calls keep coming
+ * regardless (≤ MAX_TOOL_ROUNDS + 2 OpenAI calls, always terminates).
  */
 export async function runApprenticeTurn(opts: ApprenticeTurnOptions): Promise<ApprenticeTurnResult> {
   const messages = buildApprenticeMessages(opts.history);
@@ -222,6 +223,16 @@ export async function runApprenticeTurn(opts: ApprenticeTurnOptions): Promise<Ap
   const traces: ToolCallTrace[] = [];
 
   for (let round = 0; ; round++) {
+    // Structural break (T8 review carry-in): the forced tool_choice:'none'
+    // below is advisory — a hostile/broken runtime could keep returning
+    // tool_calls anyway. This hard cap guarantees the loop always terminates.
+    if (round > MAX_TOOL_ROUNDS) {
+      return {
+        reply:
+          'I could not complete that with the available tools (too many tool rounds). Please rephrase and try again.',
+        toolCalls: traces,
+      };
+    }
     const forceText = round >= MAX_TOOL_ROUNDS;
     const message = await chatCompletion(
       opts.fetchImpl,

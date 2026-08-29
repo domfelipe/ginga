@@ -34,13 +34,24 @@ export default function OwnerPage() {
   }, []);
 
   useEffect(() => {
-    const run = () => void refresh();
+    // T4 carry-in: skip the refresh while the tab is hidden — no wasted fetches
+    // (and no stale-data churn) when the kitchen display is in a background tab.
+    const run = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      void refresh();
+    };
+    // catch up immediately when the tab becomes visible again
+    const onVisible = () => {
+      if (!document.hidden) void refresh();
+    };
     // initial fetch deferred out of the effect body (react-hooks/set-state-in-effect)
     const timeout = setTimeout(run, 0);
     const id = setInterval(run, 5000);
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       clearTimeout(timeout);
       clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, [refresh]);
 

@@ -69,7 +69,8 @@ export function getModelContext(): ModelContext | null {
 
 function debugLog(...args: unknown[]) {
   if (typeof window === 'undefined') return;
-  if (new URLSearchParams(window.location.search).get('debug') === null) return;
+  // explicit opt-in only (?debug=1) — presence-based gating (?debug) was too noisy
+  if (new URLSearchParams(window.location.search).get('debug') !== '1') return;
   console.debug('[ginga:webmcp]', ...args);
 }
 

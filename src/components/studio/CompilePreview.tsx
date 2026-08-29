@@ -39,6 +39,19 @@ function normalize(tool: CompiledTool): CompiledTool {
   };
 }
 
+// T6 carry-in: a number-typed property must hold a numeric default (steps math
+// and ajv coercion both expect it). Non-numeric input is kept as a string so
+// the user sees exactly what they typed, flagged by defaultIsInvalid below —
+// saving is blocked until it is fixed or cleared.
+function defaultIsInvalid(prop: { type?: string; default?: unknown }): boolean {
+  return (
+    prop.type === 'number' &&
+    typeof prop.default === 'string' &&
+    prop.default.trim() !== '' &&
+    Number.isNaN(Number(prop.default))
+  );
+}
+
 /**
  * Editable review of the compiled tool: name, description, schema properties
  * (required toggle + default) and a read-only summary of the steps.
@@ -58,7 +71,7 @@ export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
   const validation = validateTool(draft);
 
   async function handleSave() {
-    if (!validation.ok || saving || saved) return;
+    if (!validation.ok || hasInvalidDefault || saving || saved) return;
     setSaving(true);
     try {
       const res = await fetch('/api/tools', {
@@ -110,15 +123,22 @@ export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
     setDraft((prev) => {
       const schema = prev.inputSchema as CompiledToolSchema;
       const prop = schema.properties?.[name] ?? {};
-      const type = prop.type;
-      const value =
-        type === 'number' && raw !== '' && !Number.isNaN(Number(raw)) ? Number(raw) : raw;
+      let value: string | number | undefined;
+      if (prop.type === 'number') {
+        // coerce numerics eagerly; a non-numeric string is kept for the hint
+        // (and blocks save) instead of silently becoming NaN/0
+        value = raw === '' ? undefined : Number.isNaN(Number(raw)) ? raw : Number(raw);
+      } else {
+        value = raw;
+      }
       return {
         ...prev,
         inputSchema: { ...schema, properties: { ...schema.properties, [name]: { ...prop, default: value } } },
       };
     });
   }
+
+  const hasInvalidDefault = Object.values(schema.properties ?? {}).some(defaultIsInvalid);
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
@@ -182,7 +202,11 @@ export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
               value={prop.default === undefined ? '' : String(prop.default)}
               onChange={(e) => setDefault(name, e.target.value)}
               className="h-6 w-36 text-xs"
+              aria-invalid={defaultIsInvalid(prop)}
             />
+            {defaultIsInvalid(prop) && (
+              <span className="w-full text-xs text-destructive">invalid number</span>
+            )}
           </div>
         ))}
       </div>
@@ -203,13 +227,20 @@ export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
         <Button variant="outline" onClick={onRecompile}>
           Re-compile
         </Button>
-        <Button onClick={handleSave} disabled={!validation.ok || saving || saved}>
+        <Button
+          onClick={handleSave}
+          disabled={!validation.ok || hasInvalidDefault || saving || saved}
+        >
           {saved ? 'Saved ✓' : saving ? 'Saving…' : 'Save & register'}
         </Button>
-        {!saved && (
-          <span className="text-xs text-muted-foreground">
-            Saved tools go live for agents immediately.
-          </span>
+        {hasInvalidDefault ? (
+          <span className="text-xs text-destructive">Fix the invalid number default to save.</span>
+        ) : (
+          !saved && (
+            <span className="text-xs text-muted-foreground">
+              Saved tools go live for agents immediately.
+            </span>
+          )
         )}
       </div>
     </div>

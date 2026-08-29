@@ -10,6 +10,17 @@ type DbOrderRow = Omit<OrderRow, 'created_at' | 'delivery_date'> & {
 };
 
 // GET returns { orders: OrderRow[] } — latest 50, newest first (created_at desc).
+// T4 carry-in: date columns are normalized with UTC getters — a date stored as
+// timestamptz at UTC midnight must not shift a day when the server TZ is ahead
+// of UTC (toISOString() formats in UTC but slice() here kept the same pitfall
+// for non-midnight values; getUTC* is explicit and timezone-independent).
+function isoDateUTC(value: Date): string {
+  const y = value.getUTCFullYear();
+  const m = String(value.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(value.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export async function GET() {
   try {
     const db = getDb();
@@ -26,9 +37,7 @@ export async function GET() {
       delivery_date:
         row.delivery_date === null
           ? null
-          : (row.delivery_date instanceof Date
-              ? row.delivery_date.toISOString().slice(0, 10)
-              : row.delivery_date),
+          : (row.delivery_date instanceof Date ? isoDateUTC(row.delivery_date) : row.delivery_date),
       created_at: iso(row.created_at),
     }));
     return Response.json({ orders });
