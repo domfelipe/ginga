@@ -1,7 +1,6 @@
-import { substituteArgs, type InputSchema } from './placeholders';
 import type { TaughtTool } from './types';
 // R5 DRY mandate: foldSteps and its types moved to the server-safe pure module
-// (src/lib/tool-executor.ts) so the server-side apprentice route shares ONE
+// (src/lib/tool-executor.ts) so the server-side apprentice shares ONE
 // implementation; re-exported here for compatibility with existing consumers.
 import {
   foldSteps,
@@ -10,6 +9,7 @@ import {
   type FoldedItem,
   type FoldedOrder,
 } from './tool-executor';
+import { createToolExecutor } from './tool-executor-http';
 
 export {
   foldSteps,
@@ -88,72 +88,19 @@ function errorResult(text: string): ToolCallResult {
   return { content: [{ type: 'text', text }], isError: true };
 }
 
-interface CatalogEntry {
-  sku: string;
-  name: string;
-}
-
-async function fetchCatalog(): Promise<CatalogEntry[]> {
-  const res = await fetch('/api/catalog');
-  if (!res.ok) throw new Error(`failed to load catalog (status ${res.status})`);
-  const data = (await res.json()) as { items?: CatalogEntry[] };
-  if (!Array.isArray(data.items)) throw new Error('catalog response is malformed');
-  return data.items;
-}
-
 /**
- * Shared execute path for a taught tool: validateArgs via ajv(inputSchema) →
- * substituteArgs → foldSteps → POST /api/orders with channel 'agent'. Used BOTH
- * by real WebMCP registration and by the apprentice fallback (Task 8).
+ * Shared execute path for a taught tool: clampToolArgs → substituteArgs (ajv)
+ * → foldSteps → POST /api/orders with channel 'agent' — the ONE execute path,
+ * implemented once in src/lib/tool-executor-http.ts and used verbatim by the
+ * server-side apprentice (baseUrl = request origin); the browser bridge uses
+ * relative URLs (baseUrl ''). Errors surface as isError CallToolResults.
  */
 export function buildExecute(tool: TaughtTool): ToolRegistryEntry['execute'] {
+  const executor = createToolExecutor({ baseUrl: '', tools: [tool] });
   return async (args: Record<string, unknown>): Promise<ToolCallResult> => {
     try {
-      // validates args against inputSchema (ajv) and resolves {{placeholders}};
-      // validateTool already guarantees the schema's object shape
-      const steps = substituteArgs(tool.steps, args, tool.inputSchema as InputSchema);
-      const catalog = await fetchCatalog();
-      const folded = foldSteps(steps, catalog);
-
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: folded.items.map(({ sku, qty }) => ({ sku, qty })),
-          deliveryDate: folded.deliveryDate ?? undefined,
-          note: folded.note ?? undefined,
-          channel: 'agent',
-          toolName: tool.name,
-        }),
-      });
-      const data = (await res.json().catch(() => null)) as {
-        orderId?: unknown;
-        items?: FoldedItem[];
-        totalCents?: unknown;
-        error?: unknown;
-      } | null;
-
-      if (!res.ok) {
-        return errorResult(
-          typeof data?.error === 'string' ? data.error : `order failed with status ${res.status}`,
-        );
-      }
-      if (data === null || typeof data.orderId !== 'string' || !Array.isArray(data.items)) {
-        return errorResult(`order service returned an unexpected response (status ${res.status})`);
-      }
-      return {
-        content: [
-          {
-            type: 'text',
-            text: formatOrderResultText(
-              data.orderId,
-              data.items,
-              folded.deliveryDate,
-              typeof data.totalCents === 'number' ? data.totalCents : 0,
-            ),
-          },
-        ],
-      };
+      const text = await executor(tool.name, args);
+      return { content: [{ type: 'text', text }] };
     } catch (err) {
       return errorResult(err instanceof Error ? err.message : 'unknown error');
     }

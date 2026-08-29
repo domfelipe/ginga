@@ -2,8 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   executeToolCalls,
-  makeServerToolExecutor,
-  MAX_ARG_STRING,
   parseOpenAIToolCalls,
   runApprenticeTurn,
   toOpenAITools,
@@ -161,7 +159,6 @@ describe('executeToolCalls (mocked execute)', () => {
 
 describe('runApprenticeTurn (mocked OpenAI fetch + mocked execute)', () => {
   const tool = makeTool();
-  const catalog = [{ sku: 'pao-queijo-duzia', name: 'Pao de Queijo (dozen)' }];
   const history = [{ role: 'user' as const, content: 'order a dozen pao de queijo for Friday' }];
 
   function makeFetch(responses: Response[]) {
@@ -175,7 +172,6 @@ describe('runApprenticeTurn (mocked OpenAI fetch + mocked execute)', () => {
       apiKey: TEST_API_KEY,
       history,
       tools: [tool],
-      catalog,
       fetchImpl: fetchMock as unknown as typeof globalThis.fetch,
       execute: execute as (name: string, args: Record<string, unknown>) => Promise<string>,
     };
@@ -325,36 +321,5 @@ describe('runApprenticeTurn (mocked OpenAI fetch + mocked execute)', () => {
       String((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body),
     ) as { tools?: unknown };
     expect(body.tools).toBeUndefined();
-  });
-});
-
-describe('makeServerToolExecutor — untrusted tool-args clamp', () => {
-  it('truncates an oversized LLM string before it can reach order creation', async () => {
-    const createOrderImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      orderId: 'ord-clamp',
-      totalCents: 3000,
-    });
-    const execute = makeServerToolExecutor(
-      [makeTool()],
-      [{ sku: 'pao-queijo-duzia', name: 'Pao de Queijo (dozen)' }],
-      createOrderImpl,
-    );
-    const oversized = 'x'.repeat(10_000);
-    const text = await execute('order_pao_de_queijo', { qty: 2, deliveryDate: oversized });
-
-    // the executor still completes the happy path — on the clamped value
-    expect(text).toContain('Order #ord-clamp created');
-    // and the body that reached order creation is bounded, never the raw 10k value
-    expect(createOrderImpl).toHaveBeenCalledTimes(1);
-    const body = createOrderImpl.mock.calls[0]?.[0] as {
-      deliveryDate?: string;
-      items?: { sku: string; qty: number }[];
-      channel?: string;
-    };
-    expect(body.channel).toBe('agent');
-    expect(body.items).toEqual([{ sku: 'pao-queijo-duzia', qty: 2 }]);
-    expect(body.deliveryDate).toHaveLength(MAX_ARG_STRING);
-    expect((body.deliveryDate as string).length).toBeLessThan(oversized.length);
   });
 });

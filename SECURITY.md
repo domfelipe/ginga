@@ -23,8 +23,8 @@ User chat history and LLM output are treated as untrusted at every hop:
 1. Request body → `parseHistory` (src/lib/apprentice-server.ts): roles
    allowlisted (`user`/`assistant`), strings capped (40 messages × 2000 chars).
 2. LLM `tool_calls` arguments → `clampToolArgs`
-   (src/lib/apprentice.ts): deep clamp before any validation — strings ≤500
-   chars, arrays ≤50, object depth ≤3, `__proto__`/`constructor`/`prototype`
+   (src/lib/tool-executor-http.ts): deep clamp before any validation — strings
+   ≤500 chars, arrays ≤50, object depth ≤3, `__proto__`/`constructor`/`prototype`
    keys dropped. LLM output is bounded before it reaches order creation.
 3. `substituteArgs` (src/lib/placeholders.ts): ajv schema validation against
    the tool's `inputSchema` + placeholder resolution with type coercion.
@@ -43,10 +43,18 @@ Grep-audited repo-wide on 2026-08-29: query sites exist only in
 `src/lib/queries.ts`, `src/lib/orders.ts`, `src/app/api/orders/route.ts`,
 `src/app/api/tools/route.ts`, `src/app/api/catalog/route.ts`,
 `src/app/api/health/route.ts`; `neon(` appears only in `src/lib/db.ts`; no
-`.query(` / `db(` string-call sites exist. Scanner advisories claiming
-"sql-injection entry" on `runApprenticeTurn`/`/api/apprentice` are false
-positives: nothing in that chain reaches SQL except `createOrder`'s bound-param
-templates.
+`.query(` / `db(` string-call sites exist.
+
+The LLM loop has **no in-process SQL reach at all**: the apprentice chain
+(`src/lib/apprentice.ts` + `src/lib/apprentice-server.ts`) contains no
+`createOrder` import and no db write. Tool execution goes through the same
+validated HTTP seam the browser bridge uses (`createToolExecutor` in
+`src/lib/tool-executor-http.ts`, baseUrl = request origin → GET /api/catalog,
+POST /api/orders channel 'agent'); the only db read left in the chain is the
+`getTaughtTools` SELECT. Scanner advisories claiming "sql-injection entry" on
+`runApprenticeTurn`/`/api/apprentice` are therefore structurally impossible,
+not just audited away: orders SQL (tagged-template bound params in
+`src/lib/orders.ts`) is reachable only from the `/api/orders` route.
 
 ## LLM outputs are never trusted
 

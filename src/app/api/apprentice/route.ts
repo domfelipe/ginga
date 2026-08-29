@@ -18,8 +18,11 @@ export async function POST(req: Request) {
   if (!parsed.ok) {
     return Response.json({ error: parsed.error }, { status: 400 });
   }
+  // tool execution calls back into this origin over HTTP (same seam as the
+  // browser bridge) — no in-process SQL in the LLM loop's reach
+  const origin = new URL(req.url).origin;
   try {
-    const result = await handleApprenticeTurn(parsed.history);
+    const result = await handleApprenticeTurn(parsed.history, origin);
     return Response.json(result);
   } catch (err) {
     return Response.json(
