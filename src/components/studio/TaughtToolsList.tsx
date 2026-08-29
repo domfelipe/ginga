@@ -6,6 +6,30 @@ import { ExportDialog } from '@/components/studio/ExportDialog';
 import { Badge } from '@/components/ui/badge';
 import type { TaughtTool } from '@/lib/types';
 
+type ToolSchema = {
+  properties?: Record<string, { type?: string }>;
+  required?: string[];
+};
+
+/* Spec-sheet chip: property name (mono) + type + amber dot when required. */
+function SchemaChip({
+  name,
+  prop,
+  required,
+}: {
+  name: string;
+  prop?: { type?: string };
+  required: boolean;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-2 py-0.5 font-mono text-[11px]">
+      {required && <span aria-hidden className="size-1.5 rounded-full bg-primary" />}
+      {name}
+      <span className="text-muted-foreground">{prop?.type ?? 'any'}</span>
+    </span>
+  );
+}
+
 /** Fired on window after every successful registerAllTools() refresh. */
 export const TOOLS_UPDATED_EVENT = 'ginga:tools-updated';
 
@@ -68,25 +92,44 @@ export function TaughtToolsList() {
 
   return (
     <ul className="flex flex-col gap-2">
-      {tools.map((tool) => (
-        <li
-          key={tool.id}
-          className="flex flex-wrap items-center gap-2 rounded-xl border border-border p-3"
-        >
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="flex items-center gap-2">
-              <span className="truncate font-mono text-sm">{tool.name}</span>
-              {tool.published ? (
-                <Badge variant="secondary">published</Badge>
-              ) : (
-                <Badge variant="outline">draft</Badge>
+      {tools.map((tool) => {
+        const schema = (tool.inputSchema ?? {}) as ToolSchema;
+        const required = new Set(schema.required ?? []);
+        const props = Object.entries(schema.properties ?? {});
+        return (
+          <li
+            key={tool.id}
+            className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3.5 shadow-soft transition-colors hover:border-primary/40"
+          >
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="font-display truncate text-base font-semibold tracking-tight">
+                  {tool.name}
+                </span>
+                {tool.published ? (
+                  <Badge variant="secondary">published</Badge>
+                ) : (
+                  <Badge variant="outline">draft</Badge>
+                )}
+              </span>
+              <span className="truncate text-xs text-muted-foreground">{tool.description}</span>
+              {props.length > 0 && (
+                <span className="mt-1 flex flex-wrap gap-1.5">
+                  {props.map(([name, prop]) => (
+                    <SchemaChip
+                      key={name}
+                      name={name}
+                      prop={prop}
+                      required={required.has(name)}
+                    />
+                  ))}
+                </span>
               )}
-            </span>
-            <span className="truncate text-xs text-muted-foreground">{tool.description}</span>
-          </div>
-          <ExportDialog tool={tool} />
-        </li>
-      ))}
+            </div>
+            <ExportDialog tool={tool} />
+          </li>
+        );
+      })}
     </ul>
   );
 }

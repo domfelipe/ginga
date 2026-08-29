@@ -113,9 +113,11 @@ export function ApprenticePanel() {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
-      <div className="flex flex-col gap-1.5">
-        <h2 className="text-sm font-medium">Apprentice knows</h2>
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-soft">
+      <div className="flex flex-col gap-2">
+        <h2 className="font-display text-base font-semibold tracking-tight">
+          What the apprentice knows
+        </h2>
         {tools === null ? (
           <p className="text-xs text-muted-foreground">Loading taught tools…</p>
         ) : tools.length === 0 ? (
@@ -125,7 +127,13 @@ export function ApprenticePanel() {
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {tools.map((tool) => (
-              <Badge key={tool.id} variant="secondary" title={tool.description}>
+              <Badge
+                key={tool.id}
+                variant="secondary"
+                className="h-auto gap-1 px-2.5 py-1"
+                title={tool.description}
+              >
+                <span aria-hidden className="size-1.5 rounded-full bg-primary" />
                 {tool.name}
               </Badge>
             ))}
@@ -134,7 +142,7 @@ export function ApprenticePanel() {
       </div>
 
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-pretty text-sm text-muted-foreground">
           Chat with the apprentice — e.g. “order a dozen pão de queijo for Friday”. Every tool it
           discovers and calls shows up as a trace, using the exact same execute path as a real
           WebMCP agent.
@@ -143,15 +151,26 @@ export function ApprenticePanel() {
         <ol className="flex flex-col gap-3">
           {items.map((item, i) =>
             item.kind === 'trace' ? (
-              <li key={i} className="flex flex-col gap-1 rounded-lg bg-muted/50 p-3 font-mono text-xs">
+              <li
+                key={i}
+                className="flex flex-col gap-2 rounded-xl border border-border bg-muted/40 p-3"
+              >
                 {item.toolCalls.map((call, j) => (
-                  <div key={j} className="flex flex-col">
-                    <span>
-                      <span className="text-muted-foreground">tool</span> {call.name}
-                      <span className="text-muted-foreground"> args</span> {JSON.stringify(call.args)}
+                  <div key={j} className="flex flex-col gap-1 rounded-lg bg-card px-3 py-2 font-mono text-xs shadow-soft">
+                    <span className="flex flex-wrap items-baseline gap-1.5">
+                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                        tool
+                      </span>
+                      <span className="font-semibold">{call.name}</span>
+                      <span className="break-all text-muted-foreground">
+                        {JSON.stringify(call.args)}
+                      </span>
                     </span>
-                    <span className={call.resultText ? '' : 'text-muted-foreground'}>
-                      <span className="text-muted-foreground">→</span> {call.resultText}
+                    <span className={call.resultText ? 'break-all' : 'break-all text-muted-foreground'}>
+                      <span aria-hidden className="text-primary">
+                        →{' '}
+                      </span>
+                      {call.resultText}
                     </span>
                   </div>
                 ))}
@@ -161,8 +180,8 @@ export function ApprenticePanel() {
                 key={i}
                 className={
                   item.role === 'user'
-                    ? 'self-end max-w-[85%] rounded-2xl bg-primary px-3 py-1.5 text-sm text-primary-foreground'
-                    : 'self-start max-w-[85%] rounded-2xl bg-muted px-3 py-1.5 text-sm whitespace-pre-wrap'
+                    ? 'max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-3 py-1.5 text-sm text-primary-foreground'
+                    : 'max-w-[85%] self-start rounded-2xl rounded-bl-md border border-border bg-muted px-3 py-1.5 text-sm whitespace-pre-wrap'
                 }
               >
                 {item.content}
@@ -186,8 +205,14 @@ export function ApprenticePanel() {
           maxLength={2000}
           disabled={sending}
           aria-label="Message the apprentice"
+          className="h-9 rounded-full px-4"
         />
-        <Button type="submit" disabled={sending || input.trim().length === 0}>
+        <Button
+          type="submit"
+          size="lg"
+          className="rounded-full"
+          disabled={sending || input.trim().length === 0}
+        >
           {sending ? 'Thinking…' : 'Send'}
         </Button>
       </form>

@@ -141,9 +141,9 @@ export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
   const hasInvalidDefault = Object.values(schema.properties ?? {}).some(defaultIsInvalid);
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-soft">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium">Compiled tool</h2>
+        <h2 className="font-display text-base font-semibold tracking-tight">Compiled tool</h2>
         {validation.ok ? (
           <Badge variant="secondary">valid</Badge>
         ) : (
@@ -183,8 +183,11 @@ export function CompilePreview({ tool, onRecompile }: CompilePreviewProps) {
         {Object.entries(schema.properties ?? {}).map(([name, prop]) => (
           <div
             key={name}
-            className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 px-3 py-2"
+            className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2"
           >
+            {(schema.required ?? []).includes(name) && (
+              <span aria-hidden className="size-1.5 rounded-full bg-primary" />
+            )}
             <span className="font-mono text-xs">{name}</span>
             <Badge variant="outline">{prop.type ?? 'any'}</Badge>
             <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
