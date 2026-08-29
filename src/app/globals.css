@@ -265,4 +265,324 @@
       radial-gradient(42rem 26rem at 50% -8%, color-mix(in oklch, var(--primary) 18%, transparent), transparent 70%),
       radial-gradient(28rem 20rem at 82% 22%, color-mix(in oklch, var(--terracotta) 10%, transparent), transparent 70%);
   }
+
+  /* ── Hero demo loop ────────────────────────────────────────────────────────
+     A silent 10s CSS-only cycle: order ticket → compiled tool → live for
+     agents. Every element shares one 10s timeline with phase windows encoded
+     as keyframe percentages (per-element delays would desync after the first
+     loop). Under prefers-reduced-motion the animation is dropped entirely and
+     the final scene (assembled tool + agent reply) shows statically. */
+  .hl-rec {
+    animation: hl-rec 10s ease-out infinite both;
+  }
+  .hl-count-1 {
+    animation: hl-count-1 10s linear infinite both;
+  }
+  .hl-count-2 {
+    animation: hl-count-2 10s linear infinite both;
+  }
+  .hl-count-3 {
+    animation: hl-count-3 10s linear infinite both;
+  }
+  .hl-ticket {
+    animation: hl-ticket 10s ease-in-out infinite both;
+  }
+  .hl-line-1 {
+    animation: hl-line-1 10s ease-out infinite both;
+  }
+  .hl-line-2 {
+    animation: hl-line-2 10s ease-out infinite both;
+  }
+  .hl-line-3 {
+    animation: hl-line-3 10s ease-out infinite both;
+  }
+  .hl-card {
+    animation: hl-card 10s ease-out infinite both;
+  }
+  .hl-name {
+    animation: hl-name 10s cubic-bezier(0.65, 0, 0.35, 1) infinite both;
+  }
+  .hl-desc {
+    animation: hl-desc 10s ease-out infinite both;
+  }
+  .hl-chip-1 {
+    animation: hl-chip-1 10s ease-out infinite both;
+  }
+  .hl-chip-2 {
+    animation: hl-chip-2 10s ease-out infinite both;
+  }
+  .hl-chip-3 {
+    animation: hl-chip-3 10s ease-out infinite both;
+  }
+  .hl-live {
+    animation: hl-live 10s ease-out infinite both;
+  }
+  .hl-bubble {
+    animation: hl-bubble 10s ease-out infinite both;
+  }
+}
+
+/* Loop keyframes. Percentages of the shared 10s cycle:
+   0–30% ticket records (REC counter ticking) · 30–40% ticket folds into the
+   tool card · 40–63% card assembles (name, description, schema chips) ·
+   63–72% "live for agents" + agent reply · 72–86% hold · 86–94% gentle fade ·
+   94–100% breath before the restart. All elements rest hidden at 100% so the
+   loop seam is invisible; the .hl-card parent masks its children on the way
+   out. Reduced motion swaps all of this for the static final scene. */
+@keyframes hl-rec {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  3% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  86% {
+    opacity: 1;
+  }
+  94%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes hl-count-1 {
+  0%,
+  2% {
+    opacity: 0;
+  }
+  3%,
+  6% {
+    opacity: 1;
+  }
+  7%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes hl-count-2 {
+  0%,
+  6% {
+    opacity: 0;
+  }
+  7%,
+  12% {
+    opacity: 1;
+  }
+  13%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes hl-count-3 {
+  0%,
+  12% {
+    opacity: 0;
+  }
+  13%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes hl-ticket {
+  0%,
+  1% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  4% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  37%,
+  100% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+}
+@keyframes hl-line-1 {
+  0%,
+  3% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  5% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  35%,
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+@keyframes hl-line-2 {
+  0%,
+  9% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  11% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  32% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  37%,
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+@keyframes hl-line-3 {
+  0%,
+  15% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  17% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  34% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  39%,
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+@keyframes hl-card {
+  0%,
+  33% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  86% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  94%,
+  100% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+@keyframes hl-name {
+  0%,
+  40% {
+    clip-path: inset(0 100% 0 0);
+  }
+  47%,
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes hl-desc {
+  0%,
+  47% {
+    opacity: 0;
+  }
+  51%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes hl-chip-1 {
+  0%,
+  50% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  53% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  55%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes hl-chip-2 {
+  0%,
+  54% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  57% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  59%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes hl-chip-3 {
+  0%,
+  58% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  61% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  63%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes hl-live {
+  0%,
+  63% {
+    opacity: 0;
+  }
+  67%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes hl-bubble {
+  0%,
+  68% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+  }
+  72%,
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-loop .hl-anim {
+    animation: none !important;
+  }
+  /* static final state: the assembled tool and the agent reply — the
+     recording ticket and REC pill never existed in this scene */
+  .hero-loop .hl-rec,
+  .hero-loop .hl-ticket {
+    display: none;
+  }
 }
