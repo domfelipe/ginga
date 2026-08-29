@@ -263,12 +263,64 @@ export async function runApprenticeTurn(opts: ApprenticeTurnOptions): Promise<Ap
 
 // --- server-side executor factory (assembled by the route) ------------------------
 
+// Untrusted-input clamps for LLM-supplied tool args (see clampToolArgs).
+export const MAX_ARG_STRING = 500; // mirrors MAX_STRING in src/lib/orders.ts
+export const MAX_ARG_ARRAY = 50;
+export const MAX_ARG_DEPTH = 3;
+
+const FORBIDDEN_ARG_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+function clampValue(value: unknown, depth: number): unknown {
+  if (typeof value === 'string') {
+    return value.length > MAX_ARG_STRING ? value.slice(0, MAX_ARG_STRING) : value;
+  }
+  if (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    value === null ||
+    value === undefined
+  ) {
+    return value;
+  }
+  if (depth >= MAX_ARG_DEPTH) return null; // nested too deep → dropped
+  if (Array.isArray(value)) {
+    return value.slice(0, MAX_ARG_ARRAY).map((entry) => clampValue(entry, depth + 1));
+  }
+  if (typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+      if (FORBIDDEN_ARG_KEYS.has(key)) continue; // prototype-pollution guard
+      out[key] = clampValue(entry, depth + 1);
+    }
+    return out;
+  }
+  return null; // functions/symbols/anything exotic → dropped
+}
+
+/**
+ * Tool args come from LLM output = untrusted; clamp them BEFORE schema
+ * validation: every string truncated to MAX_ARG_STRING chars, arrays capped at
+ * MAX_ARG_ARRAY entries, objects nested at most MAX_ARG_DEPTH levels, and
+ * prototype-pollution keys dropped. substituteArgs (ajv) and createOrder
+ * revalidate everything downstream — this pure clamp guarantees bounded input
+ * reaches them, which also makes the taint boundary self-evident to scanners:
+ * no unbounded LLM value can flow into order creation.
+ */
+export function clampToolArgs(args: Record<string, unknown>): Record<string, unknown> {
+  const clamped: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(args)) {
+    if (FORBIDDEN_ARG_KEYS.has(key)) continue;
+    clamped[key] = clampValue(value, 1);
+  }
+  return clamped;
+}
+
 /**
  * Build the executor for taught tools using the SAME logic as the client
- * buildExecute (webmcp.ts): substituteArgs → foldSteps → createOrder with
- * channel 'agent'. Throws on failure (executeToolCalls captures the message);
- * success returns the shared formatOrderResultText contract. Catalog is
- * pre-fetched by the caller (server-side, from Neon).
+ * buildExecute (webmcp.ts): clampToolArgs → substituteArgs → foldSteps →
+ * createOrder with channel 'agent'. Throws on failure (executeToolCalls
+ * captures the message); success returns the shared formatOrderResultText
+ * contract. Catalog is pre-fetched by the caller (server-side, from Neon).
  */
 export function makeServerToolExecutor(
   tools: TaughtTool[],
@@ -282,9 +334,13 @@ export function makeServerToolExecutor(
     items?: { sku: string; name: string; qty: number }[];
   }>,
 ): (name: string, args: Record<string, unknown>) => Promise<string> {
-  return async (name, args) => {
+  return async (name, rawArgs) => {
     const tool = tools.find((candidate) => candidate.name === name);
     if (!tool) throw new Error(`tool "${name}" is not registered`);
+    // tool args come from LLM output = untrusted; clamped before schema
+    // validation, which also satisfies taint analysis that args are bounded
+    // before reaching order creation
+    const args = clampToolArgs(rawArgs);
     // same pipeline as buildExecute: ajv-validated placeholder substitution,
     // then fold resolved steps into the order draft
     const steps = substituteArgs(tool.steps, args, tool.inputSchema as InputSchema);
