@@ -10,7 +10,14 @@ export const ginga = {
   // Set iteration preserves registration order.
   intent(name: IntentName, params: Record<string, unknown> = {}) {
     const step = { intent: name, params, at: Date.now() };
-    listeners.forEach((l) => l(step));
+    listeners.forEach((l) => {
+      try {
+        l(step);
+      } catch (err) {
+        // one faulty listener must not abort delivery to the rest
+        console.error('ginga: intent listener failed', err);
+      }
+    });
   },
   onIntent(cb: IntentListener) {
     listeners.add(cb);
