@@ -59,6 +59,7 @@ Money is integer cents everywhere; the owner's kitchen view (`/owner`) polls ord
 
 ## Key design decisions
 
+- **Semantic capture over DOM replay.** The recorder stores what the user *meant* — `{intent: 'add_item', params: {sku, qty}}` over a closed five-verb vocabulary — not what they clicked. DOM-level replay (classic RPA: selector lists + scripted clicks) breaks on any redesign, leaks page structure into the tool, and can't cross sites; semantic steps are stable, human-editable in the studio, trivially LLM-compilable into `{{placeholder}}` parameters, and exportable to any surface (WebMCP, `tool.json`, plain HTTP) because nothing in them depends on the page that produced them. The cost is a fixed intent vocabulary per domain — a trade Ginga takes deliberately: breadth comes from teaching, not from a universal browser macro.
 - **One execute path (DRY).** `foldSteps` lives in a pure, server-safe module shared verbatim by the client bridge, the server apprentice executor, and (as a documented port) `sdk.js`. An agent's answer is identical no matter which surface ran the tool.
 - **Non-programmers author tools.** The LLM compiler plus strict validation makes demonstration the only required skill. Validation errors are typed and actionable (bad name pattern, undeclared placeholder, empty steps, …).
 - **Graceful degradation everywhere.** No `modelContext` → in-app registry still powers the Apprentice. No OpenAI key → the Apprentice explains exactly what to set. DB down → menu renders a readable empty state, API routes return structured 500s.

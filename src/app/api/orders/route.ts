@@ -4,10 +4,25 @@ import type { OrderRow } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
+// R6 (public demo, no PII): public/sdk.js POSTs here cross-origin from any
+// external site running the exported snippet. Content-Type: application/json
+// makes the POST non-simple (preflighted), so OPTIONS must be answered and
+// every response must carry a permissive ACAO (same rationale as /api/tools).
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
 type DbOrderRow = Omit<OrderRow, 'created_at' | 'delivery_date'> & {
   created_at: Date | string;
   delivery_date: Date | string | null;
 };
+
+// Preflight for the cross-origin sdk.js execute path: 204 + the CORS contract.
+export function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
 
 // GET returns { orders: OrderRow[] } — latest 50, newest first (created_at desc).
 // T4 carry-in: date columns are normalized with UTC getters — a date stored as
@@ -40,11 +55,11 @@ export async function GET() {
           : (row.delivery_date instanceof Date ? isoDateUTC(row.delivery_date) : row.delivery_date),
       created_at: iso(row.created_at),
     }));
-    return Response.json({ orders });
+    return Response.json({ orders }, { headers: CORS_HEADERS });
   } catch (err) {
     return Response.json(
       { ok: false, error: err instanceof Error ? err.message : 'unknown error' },
-      { status: 500 },
+      { status: 500, headers: CORS_HEADERS },
     );
   }
 }
@@ -56,13 +71,16 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const result = await createOrder(body);
   if (!result.ok) {
-    return Response.json({ ok: false, error: result.error }, { status: result.status });
+    return Response.json(
+      { ok: false, error: result.error },
+      { status: result.status, headers: CORS_HEADERS },
+    );
   }
   // items/totalCents are additive since Task 7: the agent execute path quotes
   // the server-authoritative order in its CallToolResult text (no client-side
   // pricing duplication). orderId remains the only field the cart consumes.
   return Response.json(
     { orderId: result.orderId, items: result.items, totalCents: result.totalCents },
-    { status: 201 },
+    { status: 201, headers: CORS_HEADERS },
   );
 }
