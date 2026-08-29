@@ -57,11 +57,26 @@ export default function OwnerPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-12">
-      <header className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Kitchen view — orders in real time</h1>
-        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <span aria-hidden className="size-2 animate-pulse rounded-full bg-green-500" />
-          live · refreshes every 5s
+      <header className="mb-8 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Kitchen wall</h1>
+          <p className="text-sm text-muted-foreground">
+            Orders in real time — from humans and agents alike.
+          </p>
+        </div>
+        {/* remounts (and pops) whenever the poll brings a different order count */}
+        <span
+          key={orders.length}
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft"
+        >
+          <span aria-hidden className="relative flex size-2">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+            <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+          </span>
+          <span className="animate-badge-pop font-semibold tabular-nums text-foreground">
+            {orders.length}
+          </span>
+          on the wall · refreshes every 5s
         </span>
       </header>
 
