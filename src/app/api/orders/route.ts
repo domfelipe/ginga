@@ -1,4 +1,5 @@
 import { getDb } from '@/lib/db';
+import type { OrderRow } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,42 @@ function optionalString(value: unknown, field: string): string | null {
   if (typeof value !== 'string') throw new Error(`${field} must be a string`);
   if (value.length > MAX_STRING) throw new Error(`${field} must be at most ${MAX_STRING} chars`);
   return value.length === 0 ? null : value;
+}
+
+type DbOrderRow = Omit<OrderRow, 'created_at' | 'delivery_date'> & {
+  created_at: Date | string;
+  delivery_date: Date | string | null;
+};
+
+// GET returns { orders: OrderRow[] } — latest 50, newest first (created_at desc).
+export async function GET() {
+  try {
+    const db = getDb();
+    const rows = (await db`
+      select id, items, delivery_date, note, total_cents, channel, tool_name, created_at
+      from orders
+      order by created_at desc
+      limit 50
+    `) as DbOrderRow[];
+    // date/timestamptz columns arrive as Date from the driver; OrderRow wants strings
+    const iso = (value: Date | string) => (value instanceof Date ? value.toISOString() : value);
+    const orders: OrderRow[] = rows.map((row) => ({
+      ...row,
+      delivery_date:
+        row.delivery_date === null
+          ? null
+          : (row.delivery_date instanceof Date
+              ? row.delivery_date.toISOString().slice(0, 10)
+              : row.delivery_date),
+      created_at: iso(row.created_at),
+    }));
+    return Response.json({ orders });
+  } catch (err) {
+    return Response.json(
+      { ok: false, error: err instanceof Error ? err.message : 'unknown error' },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(req: Request) {
