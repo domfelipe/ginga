@@ -1,3 +1,4 @@
+import { ApprenticePanel } from '@/components/studio/ApprenticePanel';
 import { RecordPanel } from '@/components/studio/RecordPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -16,15 +17,14 @@ export default function StudioPage() {
       <Tabs defaultValue="teach">
         <TabsList>
           <TabsTrigger value="teach">Teach</TabsTrigger>
-          {/* Apprentice view lands in a later build */}
-          <TabsTrigger value="apprentice" disabled>
-            Apprentice
-          </TabsTrigger>
+          <TabsTrigger value="apprentice">Apprentice</TabsTrigger>
         </TabsList>
         <TabsContent value="teach">
           <RecordPanel />
         </TabsContent>
-        <TabsContent value="apprentice" />
+        <TabsContent value="apprentice">
+          <ApprenticePanel />
+        </TabsContent>
       </Tabs>
     </div>
   );

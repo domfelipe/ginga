@@ -1,50 +1,21 @@
 import { getDb } from '@/lib/db';
 import { validateTool } from '@/lib/placeholders';
-import type { TaughtTool, ToolStep } from '@/lib/types';
+import { getTaughtTools } from '@/lib/queries';
 
 export const dynamic = 'force-dynamic';
 
 // R6: public demo, no PII — the exported sdk.js consumes this cross-origin.
 const CORS_HEADERS = { 'Access-Control-Allow-Origin': '*' };
 
-type DbToolRow = Omit<TaughtTool, 'inputSchema' | 'created_at'> & {
-  input_schema: TaughtTool['inputSchema'];
-  created_at: Date | string;
-};
-
 // GET returns { tools: TaughtTool[] } — `?all=1` (studio) includes drafts,
 // otherwise only published:true. Registration order is stable (created_at asc).
+// Row mapping/query live in getTaughtTools (src/lib/queries.ts), shared with
+// the apprentice route (R5: one implementation, multiple surfaces).
 export async function GET(req: Request) {
   try {
     const all = new URL(req.url).searchParams.get('all') === '1';
     const db = getDb();
-    const rows = (
-      all
-        ? await db`
-            select id, store_id, name, description, input_schema, steps, published, created_at
-            from taught_tools
-            order by created_at asc
-          `
-        : await db`
-            select id, store_id, name, description, input_schema, steps, published, created_at
-            from taught_tools
-            where published = true
-            order by created_at asc
-          `
-    ) as (DbToolRow & { steps: ToolStep[] })[];
-
-    // jsonb columns arrive parsed; date/timestamptz arrive as Date from the
-    // driver — TaughtTool wants an ISO string for created_at
-    const tools: TaughtTool[] = rows.map((row) => ({
-      id: row.id,
-      store_id: row.store_id,
-      name: row.name,
-      description: row.description,
-      inputSchema: row.input_schema,
-      steps: row.steps,
-      published: row.published,
-      created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
-    }));
+    const tools = await getTaughtTools(db, all);
     return Response.json({ tools }, { headers: CORS_HEADERS });
   } catch (err) {
     return Response.json(
